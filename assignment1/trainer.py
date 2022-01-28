@@ -90,5 +90,14 @@ class BaseTrainer:
 
                     # TODO (Task 2d): Implement early stopping here.
                     # You can access the validation loss in val_history["loss"]
+
+                    if len(list(val_history["loss"].values())) >= 2:
+                        #if np.round(list(val_history["accuracy"].values())[-1], 5) < np.round(list(val_history["loss"].values())[-3], 5):
+                        if np.round(list(val_history["accuracy"].values())[-1], 3) == np.round(list(val_history["accuracy"].values())[-2], 3):           # what is considered as no improvement?
+                            epoch += 500                                                                                                                # or num_epoces ?
+                            print(list(val_history["accuracy"].values())[-1])
+                            print(list(val_history["accuracy"].values())[-2])
+                            break
+
                 global_step += 1
         return train_history, val_history

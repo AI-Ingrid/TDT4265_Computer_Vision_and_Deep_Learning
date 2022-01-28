@@ -14,14 +14,12 @@ def pre_process_images(X: np.ndarray):
         f"X.shape[1]: {X.shape[1]}, should be 784"
 
     # TODO implement this function (Task 2a)
+    # Normalize to [-1, 1]
+    X = X / 127.5 - 1
 
     # Add bias
     x_vector = np.ones((X.shape[0], 1))
     X = np.concatenate((X, x_vector), axis=1)
-
-    # Normalize to [-1, 1]
-    X = X / 127.5 - 1
-
     return X
 
 
@@ -76,20 +74,14 @@ class BinaryModel:
         assert self.grad.shape == self.w.shape,\
             f"Grad shape: {self.grad.shape}, w: {self.w.shape}"
 
-        # every node shall have one gradient
-        # this gradient shall be updated for each image
-
-        # X shape (100, 785)
-        # self.grad shape (785, 1)
-        # outputs shape (100, 1)
-        # targets shape (100, 1)
-
         # Add the gradient for each node for all images
         self.grad += np.dot((-(targets.T - outputs.T)), X).T
 
         # Take the mean of the gradient for each node
         batch_size = X.shape[0]
         self.grad = np.divide(self.grad, batch_size)
+
+        # Shall we update the weights here?
 
     def zero_grad(self) -> None:
         self.grad = None
