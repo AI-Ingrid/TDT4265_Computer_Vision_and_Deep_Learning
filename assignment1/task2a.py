@@ -81,8 +81,6 @@ class BinaryModel:
         batch_size = X.shape[0]
         self.grad = np.divide(self.grad, batch_size)
 
-        # Shall we update the weights here?
-
     def zero_grad(self) -> None:
         self.grad = None
 

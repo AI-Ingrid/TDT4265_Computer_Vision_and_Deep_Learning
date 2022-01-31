@@ -15,17 +15,20 @@ def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray):
     # TODO implement this function (Task 3a)
     assert targets.shape == outputs.shape,\
         f"Targets shape: {targets.shape}, outputs: {outputs.shape}"
-    raise NotImplementedError
+    cross_entropy_error = -np.sum(targets * np.log(outputs))
+    return cross_entropy_error.mean()
+
+    #return -np.mean(np.log(outputs[np.arange(len(targets)), targets]))
 
 
 class SoftmaxModel:
 
     def __init__(self, l2_reg_lambda: float):
         # Define number of input nodes
-        self.I = None
+        self.I = 784 + 1                                # should we add a bias?
 
         # Define number of output nodes
-        self.num_outputs = None
+        self.num_outputs = 10                           # 0 to 9
         self.w = np.zeros((self.I, self.num_outputs))
         self.grad = None
 
@@ -39,7 +42,9 @@ class SoftmaxModel:
             y: output of model with shape [batch size, num_outputs]
         """
         # TODO implement this function (Task 3a)
-        return None
+        z = np.dot(self.w.T, X.T)
+        y = np.exp(z) / (np.sum(np.exp(z), axis=0))
+        return y.T
 
     def backward(self, X: np.ndarray, outputs: np.ndarray, targets: np.ndarray) -> None:
         """
@@ -51,13 +56,21 @@ class SoftmaxModel:
             targets: labels/targets of each image of shape: [batch size, num_classes]
         """
         # TODO implement this function (Task 3a)
-        # To implement L2 regularization task (4b) you can get the lambda value in self.l2_reg_lambda 
+        # To implement L2 regularization task (4b) you can get the lambda value in self.l2_reg_lambda
         # which is defined in the constructor.
         assert targets.shape == outputs.shape,\
             f"Output shape: {outputs.shape}, targets: {targets.shape}"
         self.grad = np.zeros_like(self.w)
         assert self.grad.shape == self.w.shape,\
              f"Grad shape: {self.grad.shape}, w: {self.w.shape}"
+
+        # Add the gradient for each node for all images
+        self.grad += np.dot(-X.T, (targets - outputs))
+
+        # Take the mean of the gradient for each node
+        batch_size = X.shape[0]
+        self.grad = np.divide(self.grad, batch_size)
+        # LOOK AT THIS -> gradient mean for each k alone maybe?
 
     def zero_grad(self) -> None:
         self.grad = None
@@ -72,7 +85,12 @@ def one_hot_encode(Y: np.ndarray, num_classes: int):
         Y: shape [Num examples, num classes]
     """
     # TODO implement this function (Task 3a)
-    raise NotImplementedError
+    # Initialize a encoded Y
+    Y_encoded = np.zeros((Y.shape[0], num_classes))
+
+    # Perform onehot encoding
+    Y_encoded[np.arange(Y.shape[0]), Y] = 1
+    return Y_encoded
 
 
 def gradient_approximation_test(model: SoftmaxModel, X: np.ndarray, Y: np.ndarray):
