@@ -15,7 +15,9 @@ def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray):
     # TODO implement this function (Task 3a)
     assert targets.shape == outputs.shape,\
         f"Targets shape: {targets.shape}, outputs: {outputs.shape}"
-    cross_entropy_error = -np.sum(targets * np.log(outputs))
+    #cross_entropy_error = -np.matmul(targets, np.log(outputs.T))         # 0.029988 and 0.030030
+    #cross_entropy_error = -np.dot(targets, np.log(outputs.T))            # 0.029988 and 0.030039
+    cross_entropy_error = - np.sum(targets * np.log(outputs), axis=1)      # sum of all classes
     return cross_entropy_error.mean()
 
     #return -np.mean(np.log(outputs[np.arange(len(targets)), targets]))
@@ -25,7 +27,7 @@ class SoftmaxModel:
 
     def __init__(self, l2_reg_lambda: float):
         # Define number of input nodes
-        self.I = 784 + 1                                # should we add a bias?
+        self.I = 784 + 1
 
         # Define number of output nodes
         self.num_outputs = 10                           # 0 to 9
@@ -64,13 +66,12 @@ class SoftmaxModel:
         assert self.grad.shape == self.w.shape,\
              f"Grad shape: {self.grad.shape}, w: {self.w.shape}"
 
-        # Add the gradient for each node for all images
+        # Sum up the gradient for each node and for each output for all images in the batch
         self.grad += np.dot(-X.T, (targets - outputs))
 
-        # Take the mean of the gradient for each node
+        # Find the gradient for each input node and to all its classes outputs
         batch_size = X.shape[0]
         self.grad = np.divide(self.grad, batch_size)
-        # LOOK AT THIS -> gradient mean for each k alone maybe?
 
     def zero_grad(self) -> None:
         self.grad = None
@@ -85,11 +86,15 @@ def one_hot_encode(Y: np.ndarray, num_classes: int):
         Y: shape [Num examples, num classes]
     """
     # TODO implement this function (Task 3a)
-    # Initialize a encoded Y
-    Y_encoded = np.zeros((Y.shape[0], num_classes))
+    # Initialize an arry for encoded Y
+    Y_encoded = np.zeros((Y.shape[0], num_classes), dtype=int)
 
-    # Perform onehot encoding
-    Y_encoded[np.arange(Y.shape[0]), Y] = 1
+    # Create arrays for one hot encoding
+    Y_all_rows = np.arange(Y.shape[0])
+    Y_specified_cols = Y.T
+
+    # Set value in the right col for all rows to 1
+    Y_encoded[Y_all_rows, Y_specified_cols] = 1
     return Y_encoded
 
 

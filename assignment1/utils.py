@@ -26,15 +26,9 @@ def batch_loader(
     indices = list(range(len(X)))
 
     # TODO (task 2e) implement dataset shuffling here.
+    # Shuffle indices instead
     if shuffle:
-        print("Y shape BEFORE" + str(Y.shape))
-        temp = np.concatenate((X,Y), axis=1)
-        np.random.shuffle(temp)
-        X = temp[:, 0:-1]
-        Y = temp[:,-1].reshape(Y.shape[0],1)
-        print("Y shape AFTER" + str(Y.shape))
-
-
+        np.random.shuffle(indices)
 
     for i in range(num_batches):
         # select a set of indices for each batch of samples

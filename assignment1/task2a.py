@@ -35,7 +35,7 @@ def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray) -> float:
     assert targets.shape == outputs.shape,\
         f"Targets shape: {targets.shape}, outputs: {outputs.shape}"
 
-    cross_entropy_error = -(targets * np.log(outputs) + (1 - targets) * np.log(1 - outputs))
+    cross_entropy_error = -(targets * np.log(outputs) + (1 - targets) * np.log(1 - outputs)) #only one class, no need for sum
     return cross_entropy_error.mean()
 
 
