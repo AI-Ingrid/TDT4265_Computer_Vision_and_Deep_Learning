@@ -17,8 +17,13 @@ def calculate_accuracy(X: np.ndarray, targets: np.ndarray, model: SoftmaxModel) 
         Accuracy (float)
     """
     # TODO: Implement this function (task 3c)
-    accuracy = 0
-    return accuracy
+    # finne indeks til største verdi på alle rader
+    # sjekk indeks i pre opp mot indeks i target -> like count
+    # dele på batch size
+
+    pred_indices = np.argmax(model.forward(X), axis=1)
+    targets_indices = np.argmax(targets, axis=1)
+    return (pred_indices == targets_indices).sum()/X.shape[0]
 
 
 class SoftmaxTrainer(BaseTrainer):
@@ -39,7 +44,7 @@ class SoftmaxTrainer(BaseTrainer):
         outputs = self.model.forward(X_batch)
         self.model.backward(X_batch, outputs, Y_batch)
         # Could avoid loop - se example in lecture
-        for node, value in enumerate(self.model.w):
+        for node, value in enumerate(self.model.w):                                 #TODO smarter implementation to avoid loop
             self.model.w[node] += - self.learning_rate * self.model.grad[node]
         loss = cross_entropy_loss(Y_batch, outputs)
         return loss
@@ -111,7 +116,7 @@ if __name__ == "__main__":
     plt.show()
 
     # Plot accuracy
-    plt.ylim([0.89, .93])
+    plt.ylim([0.89, .95])
     utils.plot_loss(train_history["accuracy"], "Training Accuracy")
     utils.plot_loss(val_history["accuracy"], "Validation Accuracy")
     plt.xlabel("Number of Training Steps")
@@ -131,7 +136,16 @@ if __name__ == "__main__":
     # You can finish the rest of task 4 below this point.
 
     # Plotting of softmax weights (Task 4b)
-    #plt.imsave("task4b_softmax_weight.png", weight, cmap="gray")
+    # 28 x 28 og slette bias ! PLOTTER KOLONNE FOR KOLONNE FORDI ET TALL ER EN KOLONNE
+
+    x = np.arange(0, 28)
+    y = np.arange(0, 28)
+
+    for i in range(10):
+        plt.subplot(1, 10, 1)
+
+
+    plt.imsave("task4b_softmax_weight.png", model1.w, cmap="gray")
 
     # Plotting of accuracy for difference values of lambdas (task 4c)
     l2_lambdas = [2, .2, .02, .002]
