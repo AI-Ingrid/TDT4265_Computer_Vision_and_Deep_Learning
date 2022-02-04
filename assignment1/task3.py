@@ -17,10 +17,6 @@ def calculate_accuracy(X: np.ndarray, targets: np.ndarray, model: SoftmaxModel) 
         Accuracy (float)
     """
     # TODO: Implement this function (task 3c)
-    # finne indeks til største verdi på alle rader
-    # sjekk indeks i pre opp mot indeks i target -> like count
-    # dele på batch size
-
     pred_indices = np.argmax(model.forward(X), axis=1)
     targets_indices = np.argmax(targets, axis=1)
     return (pred_indices == targets_indices).sum()/X.shape[0]
@@ -43,8 +39,7 @@ class SoftmaxTrainer(BaseTrainer):
         # TODO: Implement this function (task 3b)
         outputs = self.model.forward(X_batch)
         self.model.backward(X_batch, outputs, Y_batch)
-        # Could avoid loop - se example in lecture
-        for node, value in enumerate(self.model.w):                                 #TODO smarter implementation to avoid loop
+        for node, value in enumerate(self.model.w):
             self.model.w[node] += - self.learning_rate * self.model.grad[node]
         loss = cross_entropy_loss(Y_batch, outputs)
         return loss
