@@ -133,23 +133,42 @@ if __name__ == "__main__":
         X_train, Y_train, X_val, Y_val,
     )
     train_history_reg01, val_history_reg01 = trainer.train(num_epochs)
+
     # You can finish the rest of task 4 below this point.
-
     # Plotting of softmax weights (Task 4b)
-    # 28 x 28 og slette bias ! PLOTTER KOLONNE FOR KOLONNE FORDI ET TALL ER EN KOLONNE
 
-    x = np.arange(0, 28)
-    y = np.arange(0, 28)
+    weights = np.zeros((28, 280))
+    weights_l2 = np.zeros((28, 280))
 
     for i in range(10):
-        plt.subplot(1, 10, 1)
+        weights[:28, 28 * i: 28 * (i + 1)] = np.reshape(model.w[:784, i], (28, 28))
+        weights_l2[:28, 28 * i: 28 * (i + 1)] = np.reshape(model1.w[:784, i], (28, 28))
 
-
-    plt.imsave("task4b_softmax_weight.png", model1.w, cmap="gray")
+    plt.imsave("task4b_softmax_weight.png", weights, cmap="gray")
+    plt.imsave("task4b_softmax_weight_l2.png", weights_l2, cmap="gray")
 
     # Plotting of accuracy for difference values of lambdas (task 4c)
-    l2_lambdas = [2, .2, .02, .002]
+    l2_lambdas = [0, 2, .2, .02, .002]
+    for i in range(5):
+        model_lambda = SoftmaxModel(l2_reg_lambda=l2_lambdas[i])
+        trainer = SoftmaxTrainer(
+            model_lambda, learning_rate, batch_size, shuffle_dataset,
+            X_train, Y_train, X_val, Y_val,
+        )
+        train_history_reg01, val_history_reg01 = trainer.train(num_epochs)
+        print("Final Validation accuracy:", calculate_accuracy(X_val, Y_val, model_lambda))
+
+
+        plt.ylim([0.80,  0.93])
+        plt.xlim([0, 700])
+        utils.plot_loss(val_history_reg01["accuracy"], str(l2_lambdas[i]))
+        plt.xlabel("Number of Training Steps")
+        plt.ylabel("Accuracy")
+        plt.legend()
+
+
     plt.savefig("task4c_l2_reg_accuracy.png")
+    plt.show()
 
     # Task 4d - Plotting of the l2 norm for each weight
 
