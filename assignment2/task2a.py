@@ -13,8 +13,21 @@ def pre_process_images(X: np.ndarray):
     """
     assert X.shape[1] == 784,\
         f"X.shape[1]: {X.shape[1]}, should be 784"
-    # TODO implement this function (Task 2a)
+
+    # Task 2a 
+    X_std = np.std(X)
+    X_mean = np.mean(X)
+
+    # TODO: studass!! Er dette riktig? Skal vi gjøre dette her? 
+    # Evt. hvor skal vi egt gjøre det?
+    X_norm = (X - X_mean)/X_std
+
+    # TODO: studass - Hva skal bias-en bli initialisert til? Fortsatt 1?
+    # Add bias
+    x_vector = np.ones((X.shape[0], 1))
+    X = np.concatenate((X_norm, x_vector), axis=1)
     return X
+
 
 
 def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray):
@@ -25,6 +38,7 @@ def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray):
     Returns:
         Cross entropy error (float)
     """
+
     assert targets.shape == outputs.shape,\
         f"Targets shape: {targets.shape}, outputs: {outputs.shape}"
     # Task 2 Implementation of one-hot-encode
@@ -43,10 +57,11 @@ class SoftmaxModel:
         # Always reset random seed before weight init to get comparable results.
         np.random.seed(1)
         # Define number of input nodes
-        self.I = None
+        self.I = 785
         self.use_improved_sigmoid = use_improved_sigmoid
 
         # Define number of output nodes
+        self.outputs = 10
         # neurons_per_layer = [64, 10] indicates that we will have two layers:
         # A hidden layer with 64 neurons and a output layer with 10 neurons.
         self.neurons_per_layer = neurons_per_layer
