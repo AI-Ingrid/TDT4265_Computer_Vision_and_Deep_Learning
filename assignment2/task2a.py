@@ -18,8 +18,6 @@ def pre_process_images(X: np.ndarray):
     X_std = np.std(X)
     X_mean = np.mean(X)
 
-    # TODO: studass!! Er dette riktig? Skal vi gjøre dette her? 
-    # Evt. hvor skal vi egt gjøre det?
     X_norm = (X - X_mean)/X_std
 
     # TODO: studass - Hva skal bias-en bli initialisert til? Fortsatt 1?
@@ -91,13 +89,13 @@ class SoftmaxModel:
         # For our first layer of weights 
         first_weight = self.ws[0]
         z_first = np.dot(first_weight.T, X.T)
-        y_first = 1.0/(1.0+np.exp(-z_first))
+        self.hidden_layer_output = 1.0/(1.0+np.exp(-z_first))
         
         # For our second layer of weights 
         second_weight = self.ws[1]
-        z_second = np.dot(second_weight.T, y_first)
-        self.hidden_layer_output = np.exp(z_second) / (np.sum(np.exp(z_second), axis=0))
-        return self.hidden_layer_output.T
+        z_second = np.dot(second_weight.T, self.hidden_layer_output)
+        y_second = np.exp(z_second) / (np.sum(np.exp(z_second), axis=0))
+        return y_second.T
 
     def backward(self, X: np.ndarray, outputs: np.ndarray,
                  targets: np.ndarray) -> None:
@@ -113,21 +111,33 @@ class SoftmaxModel:
 
         assert targets.shape == outputs.shape,\
             f"Output shape: {outputs.shape}, targets: {targets.shape}"
-        # A list of gradients.
-        # For example, self.grads[0] will be the gradient for the first hidden layer
-        self.grads = []
-        for i in self.ws: 
-            self.grads.append(np.zeros_like(i))
         
+        # Initilizing shape of gradients 
+        self.grads = [np.zeros_like(i) for i in self.ws]
+
+
+        print('grads[0] ', self.grads[0].shape)
+        print('grads[1] ', self.grads[1].shape)
+
+        print('Outputs ' , outputs.shape)
+        print('Target ' , targets.shape)
+        print('X ', X.shape)
+        print('hidden_layer_output ', self.hidden_layer_output.shape)
         
         # Fra output til hidden 
-        self.grads[0] += np.dot((-(targets.T - outputs.T)), X).T
+        self.grads[1] += np.dot((-(targets.T - outputs.T)),self.hidden_layer_output.T).T
+
+        print('grads[1] ', self.grads[1].shape)
 
         # Take the mean of the gradient for each node in hidden
-        batch_size = X.shape[0]
-        self.grads[0] = np.divide(self.grads[0], batch_size)
+        batch_size = X.shape[1]
+        self.grads[1] = np.divide(self.grads[1], batch_size)
 
         # Fra hidden til input
+        # Studass: Skal vi trekke fra noe? Hva er gradienten egt? 
+        self.grads[0] += np.dot(-self.hidden_layer_output, X).T
+        self.grads[0] = np.divide(self.grads[0], batch_size)
+
 
         
         for grad, w in zip(self.grads, self.ws):
