@@ -27,8 +27,9 @@ def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray):
     """
     assert targets.shape == outputs.shape,\
         f"Targets shape: {targets.shape}, outputs: {outputs.shape}"
-    # TODO: Implement this function (copy from last assignment)
-    raise NotImplementedError
+    # Task 2 Implementation of one-hot-encode
+    cross_entropy_error = -(targets * np.log(outputs) + (1 - targets) * np.log(1 - outputs))
+    return cross_entropy_error.mean()
 
 
 class SoftmaxModel:
@@ -106,8 +107,16 @@ def one_hot_encode(Y: np.ndarray, num_classes: int):
     Returns:
         Y: shape [Num examples, num classes]
     """
-    # TODO: Implement this function (copy from last assignment)
-    raise NotImplementedError
+    # Task 2 Implementation of one-hot-encode
+    Y_encoded = np.zeros((Y.shape[0], num_classes), dtype=int)
+
+    # Create arrays for one hot encoding
+    Y_all_rows = np.arange(Y.shape[0])
+    Y_specified_cols = Y.T
+
+    # Set value in the right col for all rows to 1
+    Y_encoded[Y_all_rows, Y_specified_cols] = 1
+    return Y_encoded
 
 
 def gradient_approximation_test(
