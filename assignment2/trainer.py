@@ -87,6 +87,26 @@ class BaseTrainer:
                     train_history["accuracy"][global_step] = accuracy_train
                     val_history["loss"][global_step] = val_loss
                     val_history["accuracy"][global_step] = accuracy_val
-                    # TODO: Implement early stopping (copy from last assignment)
+                    # TODO (Task 2d): Implement early stopping here.
+                    # You can access the validation loss in val_history["loss"]
+
+                    # Create a list for all loss values
+                    all_loss_values = list(val_history["loss"].values())
+                    count = 0
+                    smallest_val = np.min(all_loss_values)
+                    # Enable early stopping for preventing overfitting
+                    if len(all_loss_values) > 10:
+                        for i in range(11):
+                            last_element = all_loss_values.pop()
+                            if smallest_val < last_element:
+                                count += 1
+                                #print(count)
+                            else:
+                                count = 0
+                                break
+
+                            if count == 10:
+                                print("Early stopping triggered at epoch:" + str(epoch))
+                                return train_history, val_history
                 global_step += 1
         return train_history, val_history
