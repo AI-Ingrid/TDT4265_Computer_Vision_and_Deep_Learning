@@ -4,7 +4,7 @@ import typing
 np.random.seed(1)
 
 
-def pre_process_images(X: np.ndarray):
+def pre_process_images(X: np.ndarray, X_std, X_mean):
     """
     Args:
         X: images of shape [batch size, 784] in the range (0, 255)
@@ -14,13 +14,8 @@ def pre_process_images(X: np.ndarray):
     assert X.shape[1] == 784,\
         f"X.shape[1]: {X.shape[1]}, should be 784"
 
-    # Task 2a 
-    X_std = np.std(X)
-    X_mean = np.mean(X)
-
     X_norm = (X - X_mean)/X_std
 
-    # TODO: studass - Hva skal bias-en bli initialisert til? Fortsatt 1?
     # Add bias
     x_vector = np.ones((X.shape[0], 1))
     X = np.concatenate((X_norm, x_vector), axis=1)
@@ -88,7 +83,7 @@ class SoftmaxModel:
 
         # For our first layer of weights 
         first_weight = self.ws[0]
-        z_first = np.dot(first_weight.T, X.T)
+        z_first = np.dot(first_weight.T, X.T) # Dette er z_j
         self.hidden_layer_output = 1.0/(1.0+np.exp(-z_first))
         
         # For our second layer of weights 
@@ -113,8 +108,8 @@ class SoftmaxModel:
             f"Output shape: {outputs.shape}, targets: {targets.shape}"
         
         # Initilizing shape of gradients 
+        # TODO: kanskje vi ikke trenger å resette det? 
         self.grads = [np.zeros_like(i) for i in self.ws]
-
 
         print('grads[0] ', self.grads[0].shape)
         print('grads[1] ', self.grads[1].shape)
@@ -137,7 +132,6 @@ class SoftmaxModel:
         # Studass: Skal vi trekke fra noe? Hva er gradienten egt? 
         self.grads[0] += np.dot(-self.hidden_layer_output, X).T
         self.grads[0] = np.divide(self.grads[0], batch_size)
-
 
         
         for grad, w in zip(self.grads, self.ws):
@@ -209,7 +203,9 @@ if __name__ == "__main__":
         f"Expected the vector to be [0,0,0,1,0,0,0,0,0,0], but got {Y}"
 
     X_train, Y_train, *_ = utils.load_full_mnist()
-    X_train = pre_process_images(X_train)
+    X_std = np.std(X_train)
+    X_mean = np.mean(X_train)
+    X_train = pre_process_images(X_train, X_std, X_mean)
     Y_train = one_hot_encode(Y_train, 10)
     assert X_train.shape[1] == 785,\
         f"Expected X_train to have 785 elements per image. Shape was: {X_train.shape}"
