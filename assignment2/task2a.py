@@ -110,12 +110,26 @@ class SoftmaxModel:
             targets: labels/targets of each image of shape: [batch size, num_classes]
         """
         # TODO implement this function (Task 2b)
+
         assert targets.shape == outputs.shape,\
             f"Output shape: {outputs.shape}, targets: {targets.shape}"
         # A list of gradients.
         # For example, self.grads[0] will be the gradient for the first hidden layer
         self.grads = []
+        for i in self.ws: 
+            self.grads.append(np.zeros_like(i))
+        
+        
+        # Fra output til hidden 
+        self.grads[0] += np.dot((-(targets.T - outputs.T)), X).T
 
+        # Take the mean of the gradient for each node in hidden
+        batch_size = X.shape[0]
+        self.grads[0] = np.divide(self.grads[0], batch_size)
+
+        # Fra hidden til input
+
+        
         for grad, w in zip(self.grads, self.ws):
             assert grad.shape == w.shape,\
                 f"Expected the same shape. Grad shape: {grad.shape}, w: {w.shape}."
