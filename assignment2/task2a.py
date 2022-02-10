@@ -87,7 +87,17 @@ class SoftmaxModel:
         # TODO implement this function (Task 2b)
         # HINT: For performing the backward pass, you can save intermediate activations in variables in the forward pass.
         # such as self.hidden_layer_output = ...
-        return None
+
+        # For our first layer of weights 
+        first_weight = self.ws[0]
+        z_first = np.dot(first_weight.T, X.T)
+        y_first = 1.0/(1.0+np.exp(-z_first))
+        
+        # For our second layer of weights 
+        second_weight = self.ws[1]
+        z_second = np.dot(second_weight.T, y_first)
+        self.hidden_layer_output = np.exp(z_second) / (np.sum(np.exp(z_second), axis=0))
+        return self.hidden_layer_output.T
 
     def backward(self, X: np.ndarray, outputs: np.ndarray,
                  targets: np.ndarray) -> None:
