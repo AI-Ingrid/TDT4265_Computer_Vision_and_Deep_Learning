@@ -42,8 +42,8 @@ def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray):
     assert targets.shape == outputs.shape,\
         f"Targets shape: {targets.shape}, outputs: {outputs.shape}"
     # Task 2 Implementation of one-hot-encode
-    cross_entropy_error = -(targets * np.log(outputs) + (1 - targets) * np.log(1 - outputs))
-    return cross_entropy_error.mean()
+    cross_entropy_error = -targets * np.log(outputs) 
+    return np.sum(cross_entropy_error, axis=1).mean()
 
 
 class SoftmaxModel:
@@ -94,11 +94,11 @@ class SoftmaxModel:
         # For our first layer of weights 
         w_j = self.ws[0]
         self.z_j = w_j.T @ X.T 
-        self.hidden_layer_output = sigmoid(-self.z_j)
+        self.hidden_layer_output = sigmoid(self.z_j)
         
         # For our second layer of weights 
         w_k = self.ws[1]
-        z_k = w_k.T @ self.hidden_layer_output
+        z_k = np.dot(w_k.T,self.hidden_layer_output)
         y_hat = np.exp(z_k) / (np.sum(np.exp(z_k), axis=0))
         return y_hat.T
 
@@ -112,15 +112,15 @@ class SoftmaxModel:
             outputs: outputs of model of shape: [batch size, num_outputs]
             targets: labels/targets of each image of shape: [batch size, num_classes]
         """
-        # TODO implement this function (Task 2b)
-
         assert targets.shape == outputs.shape,\
             f"Output shape: {outputs.shape}, targets: {targets.shape}"
- 
-        # Fra output til hidden 
-        delta_k = -(targets.T - outputs.T)
 
-        self.grads[1] = np.dot(delta_k,self.hidden_layer_output.T).T
+        # Fra output til hidden 
+        # TODO: Fikse transponeringene 
+        y_hat = targets.T
+        delta_k = -(y_hat - outputs.T)
+
+        self.grads[1] = (delta_k @ self.hidden_layer_output.T).T
 
         # Take the mean of the gradient for each node in hidden
         batch_size = X.shape[1]
