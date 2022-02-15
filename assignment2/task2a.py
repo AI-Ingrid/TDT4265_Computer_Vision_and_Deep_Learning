@@ -59,6 +59,7 @@ class SoftmaxModel:
         # Define number of input nodes
         self.I = 785
         self.use_improved_sigmoid = use_improved_sigmoid
+        # Initializing z_j for usage in backward after forward prop
         self.z_j = None
 
         # Define number of output nodes
@@ -68,13 +69,15 @@ class SoftmaxModel:
         self.neurons_per_layer = neurons_per_layer
 
         # Initialize the weights
-        self.ws = []
+        w0 = np.random.uniform(-1, 1, (785, 64))
+        w1 = np.random.uniform(-1, 1, (64, 10))
+        self.ws = [w0,w1]
+
         prev = self.I
         for size in self.neurons_per_layer:
             w_shape = (prev, size)
             print("Initializing weight to shape:", w_shape)
             w = np.zeros(w_shape)
-            self.ws.append(w)
             prev = size
         self.grads = [None for i in range(len(self.ws))]
 
@@ -85,18 +88,17 @@ class SoftmaxModel:
         Returns:
             y: output of model with shape [batch size, num_outputs]
         """
-        # TODO implement this function (Task 2b)
         # HINT: For performing the backward pass, you can save intermediate activations in variables in the forward pass.
         # such as self.hidden_layer_output = ...
 
         # For our first layer of weights 
         w_j = self.ws[0]
-        self.z_j = np.dot(w_j.T, X.T) # Dette er z_j
+        self.z_j = w_j.T @ X.T 
         self.hidden_layer_output = sigmoid(-self.z_j)
         
         # For our second layer of weights 
         w_k = self.ws[1]
-        z_k = np.dot(w_k.T, self.hidden_layer_output)
+        z_k = w_k.T @ self.hidden_layer_output
         y_hat = np.exp(z_k) / (np.sum(np.exp(z_k), axis=0))
         return y_hat.T
 
@@ -114,16 +116,11 @@ class SoftmaxModel:
 
         assert targets.shape == outputs.shape,\
             f"Output shape: {outputs.shape}, targets: {targets.shape}"
-        
-        # Initilizing shape of gradients 
-        # TODO: kanskje vi ikke trenger å resette det? 
-        self.grads = [np.zeros_like(i) for i in self.ws]
-        
+ 
         # Fra output til hidden 
         delta_k = -(targets.T - outputs.T)
-        print('delta_k ' , delta_k.shape)
 
-        self.grads[1] += np.dot(delta_k,self.hidden_layer_output.T).T
+        self.grads[1] = np.dot(delta_k,self.hidden_layer_output.T).T
 
         # Take the mean of the gradient for each node in hidden
         batch_size = X.shape[1]
