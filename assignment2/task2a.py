@@ -3,6 +3,13 @@ import utils
 import typing
 np.random.seed(1)
 
+def sigmoid(z):
+    """The sigmoid function."""
+    return 1.0/(1.0+np.exp(-z))
+
+def sigmoid_prime(z):
+    """Derivative of the sigmoid function."""
+    return sigmoid(z)*(1-sigmoid(z))
 
 def pre_process_images(X: np.ndarray, X_std, X_mean):
     """
@@ -52,6 +59,7 @@ class SoftmaxModel:
         # Define number of input nodes
         self.I = 785
         self.use_improved_sigmoid = use_improved_sigmoid
+        self.z_j = None
 
         # Define number of output nodes
         self.outputs = 10
@@ -82,15 +90,15 @@ class SoftmaxModel:
         # such as self.hidden_layer_output = ...
 
         # For our first layer of weights 
-        first_weight = self.ws[0]
-        z_first = np.dot(first_weight.T, X.T) # Dette er z_j
-        self.hidden_layer_output = 1.0/(1.0+np.exp(-z_first))
+        w_j = self.ws[0]
+        self.z_j = np.dot(w_j.T, X.T) # Dette er z_j
+        self.hidden_layer_output = sigmoid(-self.z_j)
         
         # For our second layer of weights 
-        second_weight = self.ws[1]
-        z_second = np.dot(second_weight.T, self.hidden_layer_output)
-        y_second = np.exp(z_second) / (np.sum(np.exp(z_second), axis=0))
-        return y_second.T
+        w_k = self.ws[1]
+        z_k = np.dot(w_k.T, self.hidden_layer_output)
+        y_hat = np.exp(z_k) / (np.sum(np.exp(z_k), axis=0))
+        return y_hat.T
 
     def backward(self, X: np.ndarray, outputs: np.ndarray,
                  targets: np.ndarray) -> None:
@@ -110,27 +118,23 @@ class SoftmaxModel:
         # Initilizing shape of gradients 
         # TODO: kanskje vi ikke trenger å resette det? 
         self.grads = [np.zeros_like(i) for i in self.ws]
-
-        print('grads[0] ', self.grads[0].shape)
-        print('grads[1] ', self.grads[1].shape)
-
-        print('Outputs ' , outputs.shape)
-        print('Target ' , targets.shape)
-        print('X ', X.shape)
-        print('hidden_layer_output ', self.hidden_layer_output.shape)
         
         # Fra output til hidden 
-        self.grads[1] += np.dot((-(targets.T - outputs.T)),self.hidden_layer_output.T).T
+        delta_k = -(targets.T - outputs.T)
+        print('delta_k ' , delta_k.shape)
 
-        print('grads[1] ', self.grads[1].shape)
+        self.grads[1] += np.dot(delta_k,self.hidden_layer_output.T).T
 
         # Take the mean of the gradient for each node in hidden
         batch_size = X.shape[1]
         self.grads[1] = np.divide(self.grads[1], batch_size)
 
         # Fra hidden til input
-        # Studass: Skal vi trekke fra noe? Hva er gradienten egt? 
-        self.grads[0] += np.dot(-self.hidden_layer_output, X).T
+        w_k = self.ws[1]
+        z_j_prime = sigmoid_prime(self.z_j)
+    
+        delta_j = z_j_prime * (w_k @ delta_k)
+        self.grads[0] = (delta_j @ X).T
         self.grads[0] = np.divide(self.grads[0], batch_size)
 
         
