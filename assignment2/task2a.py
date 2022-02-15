@@ -156,7 +156,7 @@ def one_hot_encode(Y: np.ndarray, num_classes: int):
 
     # Create arrays for one hot encoding
     Y_all_rows = np.arange(Y.shape[0])
-    Y_specified_cols = Y.T
+    Y_specified_cols = Y
 
     # Set value in the right col for all rows to 1
     Y_encoded[Y_all_rows, Y_specified_cols] = 1
