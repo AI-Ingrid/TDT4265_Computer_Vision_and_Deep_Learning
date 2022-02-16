@@ -2,7 +2,7 @@ import utils
 import matplotlib.pyplot as plt
 from task2a import pre_process_images, one_hot_encode, SoftmaxModel
 from task2 import SoftmaxTrainer
-
+import numpy as np
 
 if __name__ == "__main__":
     # hyperparameters DO NOT CHANGE IF NOT SPECIFIED IN ASSIGNMENT TEXT
@@ -19,8 +19,12 @@ if __name__ == "__main__":
 
     # Load dataset
     X_train, Y_train, X_val, Y_val = utils.load_full_mnist()
-    X_train = pre_process_images(X_train)
-    X_val = pre_process_images(X_val)
+    X_std = np.std(X_train)
+    X_mean = np.mean(X_train)
+    X_train = pre_process_images(X_train, X_std=X_std, X_mean=X_mean)
+    X_val_std = np.std(X_val)
+    X_val_mean = np.mean(X_val)
+    X_val = pre_process_images(X_val, X_std=X_val_std, X_mean=X_val_mean)
     Y_train = one_hot_encode(Y_train, 10)
     Y_val = one_hot_encode(Y_val, 10)
 

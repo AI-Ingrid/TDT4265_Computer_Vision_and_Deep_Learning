@@ -3,13 +3,41 @@ import utils
 import typing
 np.random.seed(1)
 
+
 def sigmoid(z):
     """The sigmoid function."""
     return 1.0/(1.0+np.exp(-z))
 
+
 def sigmoid_prime(z):
     """Derivative of the sigmoid function."""
     return sigmoid(z)*(1-sigmoid(z))
+
+
+def sigmoid_improved(z):
+    """The improved sigmoid function."""
+    return 1.7159 * np.tanh(2/3*z)
+
+
+def sigmoid_improved_prime(z):
+    """Derivative of the improved sigmoid function."""
+    # 1.17267 * (1/(np.cosh(2/3*z)))**2
+    return 1.7259 * 2/3 * (1 - (np.tanh(2/3*z))**2)
+
+
+def activation_func(z, use_improved):
+    if use_improved:
+        return sigmoid_improved(z)
+    else:
+        return sigmoid(z)
+
+
+def activation_func_prime(z, use_improved):
+    if use_improved:
+        return sigmoid_improved_prime(z)
+    else:
+        return sigmoid_prime(z)
+
 
 def pre_process_images(X: np.ndarray, X_std, X_mean):
     """
@@ -29,7 +57,6 @@ def pre_process_images(X: np.ndarray, X_std, X_mean):
     return X
 
 
-
 def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray):
     """
     Args:
@@ -42,8 +69,8 @@ def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray):
     assert targets.shape == outputs.shape,\
         f"Targets shape: {targets.shape}, outputs: {outputs.shape}"
     # Task 2 Implementation of one-hot-encode
-    cross_entropy_error = - targets * np.log(outputs) 
-    return np.sum(cross_entropy_error, axis=1).mean()
+    cross_entropy_error = - np.sum(targets * np.log(outputs), axis=1)
+    return cross_entropy_error.mean()
 
 
 class SoftmaxModel:
@@ -59,15 +86,14 @@ class SoftmaxModel:
         self.use_improved_sigmoid = use_improved_sigmoid # Initializing z_j for usage in backward after forward prop
         self.z_j = None
         self.outputs = 10                               # Define number of output nodes
-        
+        self.use_improved_weight_init = use_improved_weight_init
+
         # neurons_per_layer = [64, 10] indicates that we will have two layers:
         # A hidden layer with 64 neurons and a output layer with 10 neurons.
         self.neurons_per_layer = neurons_per_layer
 
-        # TODO: studass Initialize the weights fra -1 til 1 her i task 2a også???? står ikke noe om det i 2b
-        w0 = np.random.uniform(-1, 1, (785, 64))
-        w1 = np.random.uniform(-1, 1, (64, 10))
-        self.ws = [w0,w1]
+        # TASK 3A) set weights improved or not
+        self.ws = self.set_weights(self.use_improved_weight_init)
 
         prev = self.I
         for size in self.neurons_per_layer:
@@ -76,6 +102,17 @@ class SoftmaxModel:
             w = np.zeros(w_shape)
             prev = size
         self.grads = [None for i in range(len(self.ws))]
+
+    @staticmethod
+    def set_weights(use_improved):
+        if not use_improved:
+            w0 = np.random.uniform(-1, 1, (785, 64))
+            w1 = np.random.uniform(-1, 1, (64, 10))
+            return [w0, w1]
+        else:
+            w0 = np.random.normal(0, 1/np.sqrt(785),(785, 64))
+            w1 = np.random.normal(0, 1/np.sqrt(64),(64, 10))
+            return [w0, w1]
 
     def forward(self, X: np.ndarray) -> np.ndarray:
         """
@@ -87,14 +124,14 @@ class SoftmaxModel:
 
         # For our first layer of weights 
         w_j = self.ws[0]
-        self.z_j = w_j.T @ X.T 
-        self.hidden_layer_output = sigmoid(self.z_j)
+        self.z_j = (X @ w_j).T
+        self.hidden_layer_output = activation_func(self.z_j, self.use_improved_sigmoid)
         
         # For our second layer of weights 
         w_k = self.ws[1]
-        z_k = np.dot(w_k.T,self.hidden_layer_output)
+        z_k = np.dot(w_k.T, self.hidden_layer_output)
 
-        y_hat = np.exp(z_k) / (np.sum(np.exp(z_k), axis=0))     # Denne er  fra A1 Equation 4
+        y_hat = np.exp(z_k) / (np.sum(np.exp(z_k), axis=0, keepdims=True))     # Denne er  fra A1 Equation 4
         return y_hat.T
 
     def backward(self, X: np.ndarray, outputs: np.ndarray,
@@ -110,24 +147,23 @@ class SoftmaxModel:
         assert targets.shape == outputs.shape,\
             f"Output shape: {outputs.shape}, targets: {targets.shape}"
 
-        # Fra output til hidden 
-        delta_k = -(targets.T-outputs.T)
-
-        self.grads[1] = (delta_k @ self.hidden_layer_output.T).T
+        # Fra output til hidden
+        delta_k = -(targets-outputs)
+        # delta_k  (100,10)
+        self.grads[1] = self.hidden_layer_output @ delta_k
 
         # Take the mean of the gradient for each node in hidden
-        batch_size = X.shape[1]
-        self.grads[1] = self.grads[1] / batch_size
+        batch_size = X.shape[0]
+        self.grads[1] = np.divide(self.grads[1], batch_size)
 
         # Fra hidden til input
         w_k = self.ws[1]
-        z_j_prime = sigmoid_prime(self.z_j)
+        z_j_prime = activation_func_prime(self.z_j, self.use_improved_sigmoid)
     
-        delta_j = z_j_prime * (w_k @ delta_k)
+        delta_j = z_j_prime * (w_k @ delta_k.T)
         self.grads[0] = (delta_j @ X).T
-        self.grads[0] = self.grads[0] / batch_size
+        self.grads[0] = np.divide(self.grads[0], batch_size)
 
-        
         for grad, w in zip(self.grads, self.ws):
             assert grad.shape == w.shape,\
                 f"Expected the same shape. Grad shape: {grad.shape}, w: {w.shape}."
@@ -149,7 +185,7 @@ def one_hot_encode(Y: np.ndarray, num_classes: int):
 
     # Create arrays for one hot encoding
     Y_all_rows = np.arange(Y.shape[0])
-    Y_specified_cols = Y
+    Y_specified_cols = Y.T # we dont know
 
     # Set value in the right col for all rows to 1
     Y_encoded[Y_all_rows, Y_specified_cols] = 1

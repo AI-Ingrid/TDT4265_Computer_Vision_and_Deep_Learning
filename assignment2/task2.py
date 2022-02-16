@@ -16,8 +16,9 @@ def calculate_accuracy(X: np.ndarray, targets: np.ndarray, model: SoftmaxModel) 
         Accuracy (float)
     """
     # TODO: Implement this function (copy from last assignment)
-    accuracy = 0
-    return accuracy
+    pred_indices = np.argmax(model.forward(X), axis=1)
+    targets_indices = np.argmax(targets, axis=1)
+    return (pred_indices == targets_indices).sum() / X.shape[0]
 
 
 class SoftmaxTrainer(BaseTrainer):
@@ -37,7 +38,9 @@ class SoftmaxTrainer(BaseTrainer):
         # Initializing weights
         w0 = np.random.uniform(-1, 1, (785, 64))
         w1 = np.random.uniform(-1, 1, (64, 10))
-        self.ws = [w0,w1]
+        self.ws = [w0, w1]
+        self.delta_w0 = np.zeros_like(w0)
+        self.delta_w1 = np.zeros_like(w1)
 
     def train_step(self, X_batch: np.ndarray, Y_batch: np.ndarray):
         """
@@ -55,11 +58,24 @@ class SoftmaxTrainer(BaseTrainer):
         outputs = self.model.forward(X_batch)
         self.model.backward(X_batch, outputs, Y_batch)
 
-        for node, value in enumerate(self.model.ws[1]):
-            self.model.ws[node][1] += - self.learning_rate * self.model.grads[node][1]
+        # Gradient descent
+        if self.use_momentum:
+            # TODO: skal vi endre LR?
+            for node, value in enumerate(self.model.ws[1]):
+                self.model.ws[1][node] += - self.learning_rate * (self.model.grads[1][node] + self.momentum_gamma * self.delta_w1[node])
+                self.delta_w1[node] = self.model.ws[1][node]
 
-        for node, value in enumerate(self.model.w)[0]:
-            self.model.ws[node][0] += - self.learning_rate * self.model.grads[node][0]
+            for node, value in enumerate(self.model.ws[0]):
+                self.model.ws[0][node] += - self.learning_rate * (self.model.grads[0][node] + self.momentum_gamma * self.delta_w0[node])
+                self.delta_w0[node] = self.model.ws[0][node]
+
+        else:
+
+            for node, value in enumerate(self.model.ws[1]):
+                self.model.ws[1][node] += - self.learning_rate * self.model.grads[1][node]
+
+            for node, value in enumerate(self.model.ws[0]):
+                self.model.ws[0][node] += - self.learning_rate * self.model.grads[0][node]
 
         loss = cross_entropy_loss(Y_batch, outputs)
         return loss
@@ -90,23 +106,25 @@ class SoftmaxTrainer(BaseTrainer):
 if __name__ == "__main__":
     # hyperparameters DO NOT CHANGE IF NOT SPECIFIED IN ASSIGNMENT TEXT
     num_epochs = 50
-    learning_rate = .1
+    learning_rate = 0.02
     batch_size = 32
     neurons_per_layer = [64, 10]
     momentum_gamma = .9  # Task 3 hyperparameter
     shuffle_data = True
 
     # Settings for task 3. Keep all to false for task 2.
-    use_improved_sigmoid = False
-    use_improved_weight_init = False
-    use_momentum = False
+    use_improved_sigmoid = True
+    use_improved_weight_init = True
+    use_momentum = True
 
     # Load dataset
     X_train, Y_train, X_val, Y_val = utils.load_full_mnist()
     X_std = np.std(X_train)
     X_mean = np.mean(X_train)
     X_train = pre_process_images(X_train, X_std=X_std, X_mean=X_mean)
-    X_val = pre_process_images(X_val,X_std=X_std, X_mean=X_mean)
+    X_val_std = np.std(X_val)
+    X_val_mean = np.mean(X_val)
+    X_val = pre_process_images(X_val,X_std=X_val_std, X_mean=X_val_mean)
     Y_train = one_hot_encode(Y_train, 10)
     Y_val = one_hot_encode(Y_val, 10)
     # Hyperparameters
@@ -139,6 +157,7 @@ if __name__ == "__main__":
     plt.legend()
     plt.xlabel("Number of Training Steps")
     plt.ylabel("Cross Entropy Loss - Average")
+
     # Plot accuracy
     plt.subplot(1, 2, 2)
     plt.ylim([0.90, .99])
@@ -147,4 +166,5 @@ if __name__ == "__main__":
     plt.xlabel("Number of Training Steps")
     plt.ylabel("Accuracy")
     plt.legend()
-    plt.savefig("task2c_train_loss.png")
+    plt.savefig("task3c_train_loss.png")
+    plt.show()
