@@ -42,7 +42,7 @@ def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray):
     assert targets.shape == outputs.shape,\
         f"Targets shape: {targets.shape}, outputs: {outputs.shape}"
     # Task 2 Implementation of one-hot-encode
-    cross_entropy_error = -targets * np.log(outputs) 
+    cross_entropy_error = - targets * np.log(outputs) 
     return np.sum(cross_entropy_error, axis=1).mean()
 
 
@@ -88,8 +88,6 @@ class SoftmaxModel:
         Returns:
             y: output of model with shape [batch size, num_outputs]
         """
-        # HINT: For performing the backward pass, you can save intermediate activations in variables in the forward pass.
-        # such as self.hidden_layer_output = ...
 
         # For our first layer of weights 
         w_j = self.ws[0]
@@ -99,7 +97,8 @@ class SoftmaxModel:
         # For our second layer of weights 
         w_k = self.ws[1]
         z_k = np.dot(w_k.T,self.hidden_layer_output)
-        y_hat = np.exp(z_k) / (np.sum(np.exp(z_k), axis=0))
+
+        y_hat = np.exp(z_k) / (np.sum(np.exp(z_k), axis=0))     # Denne er  fra A1 Equation 4
         return y_hat.T
 
     def backward(self, X: np.ndarray, outputs: np.ndarray,
@@ -116,15 +115,13 @@ class SoftmaxModel:
             f"Output shape: {outputs.shape}, targets: {targets.shape}"
 
         # Fra output til hidden 
-        # TODO: Fikse transponeringene 
-        y_hat = targets.T
-        delta_k = -(y_hat - outputs.T)
+        delta_k = -(targets.T-outputs.T)
 
         self.grads[1] = (delta_k @ self.hidden_layer_output.T).T
 
         # Take the mean of the gradient for each node in hidden
         batch_size = X.shape[1]
-        self.grads[1] = np.divide(self.grads[1], batch_size)
+        self.grads[1] = self.grads[1] / batch_size
 
         # Fra hidden til input
         w_k = self.ws[1]
@@ -132,7 +129,7 @@ class SoftmaxModel:
     
         delta_j = z_j_prime * (w_k @ delta_k)
         self.grads[0] = (delta_j @ X).T
-        self.grads[0] = np.divide(self.grads[0], batch_size)
+        self.grads[0] = self.grads[0] / batch_size
 
         
         for grad, w in zip(self.grads, self.ws):
@@ -206,7 +203,7 @@ if __name__ == "__main__":
     X_train, Y_train, *_ = utils.load_full_mnist()
     X_std = np.std(X_train)
     X_mean = np.mean(X_train)
-    X_train = pre_process_images(X_train, X_std, X_mean)
+    X_train = pre_process_images(X_train, X_std=X_std, X_mean=X_mean)
     Y_train = one_hot_encode(Y_train, 10)
     assert X_train.shape[1] == 785,\
         f"Expected X_train to have 785 elements per image. Shape was: {X_train.shape}"
