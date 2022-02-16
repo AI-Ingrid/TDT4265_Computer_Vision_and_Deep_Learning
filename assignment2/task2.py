@@ -34,6 +34,11 @@ class SoftmaxTrainer(BaseTrainer):
         # Init a history of previous gradients to use for implementing momentum
         self.previous_grads = [np.zeros_like(w) for w in self.model.ws]
 
+        # Initializing weights
+        w0 = np.random.uniform(-1, 1, (785, 64))
+        w1 = np.random.uniform(-1, 1, (64, 10))
+        self.ws = [w0,w1]
+
     def train_step(self, X_batch: np.ndarray, Y_batch: np.ndarray):
         """
         Perform forward, backward and gradient descent step here.
@@ -93,8 +98,10 @@ if __name__ == "__main__":
 
     # Load dataset
     X_train, Y_train, X_val, Y_val = utils.load_full_mnist()
-    X_train = pre_process_images(X_train)
-    X_val = pre_process_images(X_val)
+    X_std = np.std(X_train)
+    X_mean = np.mean(X_train)
+    X_train = pre_process_images(X_train, X_std=X_std, X_mean=X_mean)
+    X_val = pre_process_images(X_val,X_std=X_std, X_mean=X_mean)
     Y_train = one_hot_encode(Y_train, 10)
     Y_val = one_hot_encode(Y_val, 10)
     # Hyperparameters
