@@ -131,7 +131,7 @@ class SoftmaxModel:
         w_k = self.ws[1]
         z_k = np.dot(w_k.T, self.hidden_layer_output)
 
-        y_hat = np.exp(z_k) / (np.sum(np.exp(z_k), axis=0, keepdims=True))     # Denne er  fra A1 Equation 4
+        y_hat = np.divide(np.exp(z_k), (np.sum(np.exp(z_k), axis=0)))     # Denne er  fra A1 Equation 4
         return y_hat.T
 
     def backward(self, X: np.ndarray, outputs: np.ndarray,

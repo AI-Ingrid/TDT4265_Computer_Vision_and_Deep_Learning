@@ -39,8 +39,10 @@ class SoftmaxTrainer(BaseTrainer):
         w0 = np.random.uniform(-1, 1, (785, 64))
         w1 = np.random.uniform(-1, 1, (64, 10))
         self.ws = [w0, w1]
-        self.delta_w0 = np.zeros_like(w0)
-        self.delta_w1 = np.zeros_like(w1)
+
+        delta_w0_prev = np.zeros_like(w0)
+        delta_w1_prev = np.zeros_like(w1)
+        self.delta_w_prev = [delta_w0_prev, delta_w1_prev]
 
     def train_step(self, X_batch: np.ndarray, Y_batch: np.ndarray):
         """
@@ -54,29 +56,26 @@ class SoftmaxTrainer(BaseTrainer):
         Returns:
             loss value (float) on batch
         """
-        # Task 2c)
+        # Task 2c) and 3c)
         outputs = self.model.forward(X_batch)
         self.model.backward(X_batch, outputs, Y_batch)
 
-        # Gradient descent
+        # Gradient descent with momentum
         if self.use_momentum:
-            # TODO: skal vi endre LR?
-            for node, value in enumerate(self.model.ws[1]):
-                self.model.ws[1][node] += - self.learning_rate * (self.model.grads[1][node] + self.momentum_gamma * self.delta_w1[node])
-                self.delta_w1[node] = self.model.ws[1][node]
+            # TODO: For
+            self.model.ws[1] = self.model.ws[1] - self.learning_rate * self.delta_w_prev[1]
+            self.model.ws[0] = self.model.ws[0] - self.learning_rate * self.delta_w_prev[0]
 
-            for node, value in enumerate(self.model.ws[0]):
-                self.model.ws[0][node] += - self.learning_rate * (self.model.grads[0][node] + self.momentum_gamma * self.delta_w0[node])
-                self.delta_w0[node] = self.model.ws[0][node]
+            # Calculate delta w (gradients) - Equation 6
+            self.delta_w_prev[1] = self.model.grads[1] + self.momentum_gamma * self.delta_w_prev[1]
+            self.delta_w_prev[0] = self.model.grads[0] + self.momentum_gamma * self.delta_w_prev[0]
 
+        # Gradient descent without momentum
         else:
+            self.model.ws[1] = self.model.ws[1] - self.learning_rate * self.model.grads[1]
+            self.model.ws[0] = self.model.ws[0] - self.learning_rate * self.model.grads[0]
 
-            for node, value in enumerate(self.model.ws[1]):
-                self.model.ws[1][node] += - self.learning_rate * self.model.grads[1][node]
-
-            for node, value in enumerate(self.model.ws[0]):
-                self.model.ws[0][node] += - self.learning_rate * self.model.grads[0][node]
-
+        self.delta_w_prev = self.model.grads
         loss = cross_entropy_loss(Y_batch, outputs)
         return loss
 
@@ -150,7 +149,7 @@ if __name__ == "__main__":
     # Plot loss for first model (task 2c)
     plt.figure(figsize=(20, 12))
     plt.subplot(1, 2, 1)
-    plt.ylim([0., .5])
+    plt.ylim([0.1, .7])
     utils.plot_loss(train_history["loss"],
                     "Training Loss", npoints_to_average=10)
     utils.plot_loss(val_history["loss"], "Validation Loss")
@@ -160,11 +159,11 @@ if __name__ == "__main__":
 
     # Plot accuracy
     plt.subplot(1, 2, 2)
-    plt.ylim([0.90, .99])
+    plt.ylim([0.85, 0.96 ])
     utils.plot_loss(train_history["accuracy"], "Training Accuracy")
     utils.plot_loss(val_history["accuracy"], "Validation Accuracy")
     plt.xlabel("Number of Training Steps")
     plt.ylabel("Accuracy")
     plt.legend()
-    plt.savefig("task3c_train_loss.png")
+    plt.savefig("train_loss_improved_all_momentum.png")
     plt.show()
