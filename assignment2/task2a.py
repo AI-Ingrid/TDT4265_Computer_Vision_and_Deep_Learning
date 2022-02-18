@@ -171,13 +171,14 @@ class SoftmaxModel:
         delta_k = -(targets-outputs)
         batch_size = X.shape[0]
 
+        z_j_prime = None
         for i in range(len(self.neurons_per_layer), 0, -1):
             print(i)
             self.grads[i] = self.hidden_layer_output[i] @ delta_k
             # Take the mean of the gradient for each node in hidden
             self.grads[i] = np.divide(self.grads[i], batch_size)
 
-        # Fra hidden til input
+            # Fra hidden til input
         w_k = self.ws[-1]
         z_j_prime = activation_func_prime(self.z_j[-1], self.use_improved_sigmoid)
     
