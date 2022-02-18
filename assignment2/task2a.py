@@ -73,6 +73,11 @@ def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray):
     return cross_entropy_error.mean()
 
 
+# TODO: 
+# [] vektene både i 
+# 
+
+
 class SoftmaxModel:
 
     def __init__(self,
@@ -95,6 +100,7 @@ class SoftmaxModel:
         # TASK 3A) set weights improved or not
         self.ws = self.set_weights(self.use_improved_weight_init)
 
+
         prev = self.I
         for size in self.neurons_per_layer:
             w_shape = (prev, size)
@@ -105,13 +111,25 @@ class SoftmaxModel:
 
     def set_weights(self, use_improved):
         if not use_improved:
-            w0 = np.random.uniform(-1, 1, (785, self.neurons_per_layer[0]))
-            w1 = np.random.uniform(-1, 1, (self.neurons_per_layer[0], 10))
-            return [w0, w1]
+            ws =[]
+            ws.append(np.random.uniform(-1, 1, (785, self.neurons_per_layer[0])))
+            for index, layer in enumerate(self.neurons_per_layer): 
+                # If last element in neurons per layer
+                if layer==self.neurons_per_layer[-1]:
+                    ws.append(np.random.uniform(-1, 1, (self.neurons_per_layer[index-1], layer)))
+                else:
+                    ws.append(np.random.uniform(-1, 1, (layer, self.neurons_per_layer[index+1])))
+            return ws
         else:
-            w0 = np.random.normal(0, 1/np.sqrt(785),(785, self.neurons_per_layer[0]))
-            w1 = np.random.normal(0, 1/np.sqrt(self.neurons_per_layer[0]),(self.neurons_per_layer[0], 10))
-            return [w0, w1]
+            ws =[]
+            ws.append(np.random.normal(0, 1/np.sqrt(785), self.model.neurons_per_layer[0]))
+            for index, layer in enumerate(self.model.neurons_per_layer): 
+                # If last element in neurons per layer
+                if layer==self.neurons_per_layer[-1]:
+                    ws.append(np.random.normal(0, 1/np.sqrt(layer)), (self.neurons_per_layer[index-1], layer))
+                else:
+                    ws.append(np.random.normal(0, 1/np.sqrt(layer), (layer, self.neurons_per_layer[index+1])))
+            return ws
 
     def forward(self, X: np.ndarray) -> np.ndarray:
         """
@@ -122,6 +140,7 @@ class SoftmaxModel:
         """
 
         # For our first layer of weights 
+
         w_j = self.ws[0]
         self.z_j = (X @ w_j).T
         self.hidden_layer_output = activation_func(self.z_j, self.use_improved_sigmoid)
