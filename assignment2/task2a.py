@@ -2,7 +2,7 @@ import numpy as np
 import utils
 import typing
 np.random.seed(1)
-
+import copy
 
 def sigmoid(z):
     """The sigmoid function."""
@@ -89,9 +89,10 @@ class SoftmaxModel:
         np.random.seed(1)                               # Always reset random seed before weight init to get comparable results.
         self.I = 785                                    # Define number of input nodes
         self.use_improved_sigmoid = use_improved_sigmoid # Initializing z_j for usage in backward after forward prop
-        self.z_j = None
+        self.z_j = []
         self.outputs = 10                               # Define number of output nodes
         self.use_improved_weight_init = use_improved_weight_init
+        self.hidden_layer_output = []
 
         # neurons_per_layer = [64, 10] indicates that we will have two layers:
         # A hidden layer with 64 neurons and a output layer with 10 neurons.
@@ -139,16 +140,18 @@ class SoftmaxModel:
             y: output of model with shape [batch size, num_outputs]
         """
 
-        # For our first layer of weights 
+        # For our first layer and hidden layer of weights 
+        input_layer = copy.deepcopy(X).T
+        for i in range(len(self.neurons_per_layer)-1):
+            w_j = copy.deepcopy(self.ws[i])
+            self.z_j.append((input_layer.T @ w_j).T)
+            self.hidden_layer_output.append(activation_func(self.z_j[i], self.use_improved_sigmoid))
+            input_layer = self.hidden_layer_output[i]
 
-        w_j = self.ws[0]
-        self.z_j = (X @ w_j).T
-        self.hidden_layer_output = activation_func(self.z_j, self.use_improved_sigmoid)
         
-        # For our second layer of weights 
-        w_k = self.ws[1]
-        z_k = np.dot(w_k.T, self.hidden_layer_output)
-
+        # For our last layer
+        w_k = self.ws[-1]
+        z_k = np.dot(w_k.T, self.hidden_layer_output[-1])
         y_hat = np.exp(z_k) / (np.sum(np.exp(z_k), axis=0, keepdims=True))     # Denne er  fra A1 Equation 4
         return y_hat.T
 
