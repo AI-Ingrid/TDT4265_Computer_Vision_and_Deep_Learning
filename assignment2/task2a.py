@@ -148,7 +148,6 @@ class SoftmaxModel:
             self.hidden_layer_output.append(activation_func(self.z_j[i], self.use_improved_sigmoid))
             input_layer = self.hidden_layer_output[i]
 
-        
         # For our last layer
         w_k = self.ws[-1]
         z_k = np.dot(w_k.T, self.hidden_layer_output[-1])
@@ -170,16 +169,17 @@ class SoftmaxModel:
 
         # Fra output til hidden
         delta_k = -(targets-outputs)
-        # delta_k  (100,10)
-        self.grads[1] = self.hidden_layer_output @ delta_k
-
-        # Take the mean of the gradient for each node in hidden
         batch_size = X.shape[0]
-        self.grads[1] = np.divide(self.grads[1], batch_size)
+
+        for i in range(len(self.neurons_per_layer), 0, -1):
+            print(i)
+            self.grads[i] = self.hidden_layer_output[i] @ delta_k
+            # Take the mean of the gradient for each node in hidden
+            self.grads[i] = np.divide(self.grads[i], batch_size)
 
         # Fra hidden til input
-        w_k = self.ws[1]
-        z_j_prime = activation_func_prime(self.z_j, self.use_improved_sigmoid)
+        w_k = self.ws[-1]
+        z_j_prime = activation_func_prime(self.z_j[-1], self.use_improved_sigmoid)
     
         delta_j = z_j_prime * (w_k @ delta_k.T)
         self.grads[0] = (delta_j @ X).T
