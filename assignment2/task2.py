@@ -36,11 +36,16 @@ class SoftmaxTrainer(BaseTrainer):
         self.previous_grads = [np.zeros_like(w) for w in self.model.ws]
 
         # Initializing weights
-        w0 = np.random.uniform(-1, 1, (785, self.model.neurons_per_layer[0]))
-        w1 = np.random.uniform(-1, 1, (self.model.neurons_per_layer[0], 10))
-        self.ws = [w0, w1]
-        self.delta_w0 = np.zeros_like(w0)
-        self.delta_w1 = np.zeros_like(w1)
+        self.ws = []
+        # First layer
+        self.ws.append(np.random.uniform(-1, 1, (785, self.model.neurons_per_layer[0])))
+        for index, layer in enumerate(self.model.neurons_per_layer): 
+            # If last element in neurons per layer
+            if layer==self.model.neurons_per_layer[-1]:
+                self.ws.append(np.random.uniform(-1, 1, (self.model.neurons_per_layer[index-1], layer)))
+            else:
+                self.ws.append(np.random.uniform(-1, 1, (layer, self.model.neurons_per_layer[index+1])))
+
 
     def train_step(self, X_batch: np.ndarray, Y_batch: np.ndarray):
         """
@@ -101,7 +106,7 @@ if __name__ == "__main__":
     num_epochs = 50
     learning_rate = 0.02
     batch_size = 32
-    neurons_per_layer = [64, 10]
+    neurons_per_layer = [64, 64, 10]
     momentum_gamma = .9  # Task 3 hyperparameter
     shuffle_data = True
 
@@ -143,7 +148,7 @@ if __name__ == "__main__":
     # Plot loss for first model (task 2c)
     plt.figure(figsize=(20, 12))
     plt.subplot(1, 2, 1)
-    plt.ylim([0., .5])
+    plt.ylim([0.1, .6])
     utils.plot_loss(train_history["loss"],
                     "Training Loss", npoints_to_average=10)
     utils.plot_loss(val_history["loss"], "Validation Loss")
@@ -153,12 +158,12 @@ if __name__ == "__main__":
 
     # Plot accuracy
     plt.subplot(1, 2, 2)
-    plt.ylim([0.90, 1])
+    plt.ylim([0.85, 0.96])
     utils.plot_loss(train_history["accuracy"], "Training Accuracy")
     utils.plot_loss(val_history["accuracy"], "Validation Accuracy")
     plt.xlabel("Number of Training Steps")
     plt.ylabel("Accuracy")
     plt.legend()
-    plt.savefig("task4b_train_loss_64_FFF.png")
-    plt.show()
+    #plt.savefig("task4a_train_loss_32_TTT.png")
+    #plt.show()
 
