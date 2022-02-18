@@ -1,8 +1,9 @@
 import numpy as np
 import utils
 import typing
-np.random.seed(1)
 import copy
+np.random.seed(1)
+
 
 def sigmoid(z):
     """The sigmoid function."""
@@ -73,11 +74,6 @@ def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray):
     return cross_entropy_error.mean()
 
 
-# TODO: 
-# [] vektene både i 
-# 
-
-
 class SoftmaxModel:
 
     def __init__(self,
@@ -110,23 +106,33 @@ class SoftmaxModel:
         self.grads = [None for i in range(len(self.ws))]
 
     def set_weights(self, use_improved):
+        ws = []
+        # Create 'not' improved weights
         if not use_improved:
-            ws =[]
+            # Initialize weights from input nodes
             ws.append(np.random.uniform(-1, 1, (785, self.neurons_per_layer[0])))
-            for index, layer in enumerate(self.neurons_per_layer): 
-                # If last element in neurons per layer
-                if layer==self.neurons_per_layer[-1]:
-                    ws.append(np.random.uniform(-1, 1, (self.neurons_per_layer[index-1], layer)))
+
+            # Initialize weights for the rest of the layers
+            for index, layer in enumerate(self.neurons_per_layer):
+
+                # For the last element in neurons_per_layer
+                if layer == self.neurons_per_layer[-1]:
+                    break
                 else:
                     ws.append(np.random.uniform(-1, 1, (layer, self.neurons_per_layer[index+1])))
             return ws
+
+        # Create the improved weights
         else:
-            ws =[]
-            ws.append(np.random.normal(0, 1/np.sqrt(785), self.model.neurons_per_layer[0]))
-            for index, layer in enumerate(self.model.neurons_per_layer): 
-                # If last element in neurons per layer
-                if layer==self.neurons_per_layer[-1]:
-                    ws.append(np.random.normal(0, 1/np.sqrt(layer)), (self.neurons_per_layer[index-1], layer))
+            # Initialize weights from input nodes
+            ws.append(np.random.normal(0, 1/np.sqrt(785), self.neurons_per_layer[0]))
+
+            # Initialize weights for the rest of the layers
+            for index, layer in enumerate(self.neurons_per_layer):
+
+                # For the last element in neurons_per_layer
+                if layer == self.neurons_per_layer[-1]:
+                    ws.append(np.random.normal(0, 1/np.sqrt(layer), (self.neurons_per_layer[index-1], layer)))
                 else:
                     ws.append(np.random.normal(0, 1/np.sqrt(layer), (layer, self.neurons_per_layer[index+1])))
             return ws
@@ -138,19 +144,22 @@ class SoftmaxModel:
         Returns:
             y: output of model with shape [batch size, num_outputs]
         """
+        # For the first forward pass from the input nodes
+        input_nodes = copy.deepcopy(X).T
 
-        # For our first layer and hidden layer of weights 
-        input_layer = copy.deepcopy(X).T
-
+        # Do forward pass through every layer expect the last layer
         for i in range(len(self.neurons_per_layer)-1):
             w_j = copy.deepcopy(self.ws[i])
-            self.z_j.append((input_layer.T @ w_j).T)
+            self.z_j.append((input_nodes.T @ w_j).T)
             self.hidden_layer_output.append(activation_func(self.z_j[i], self.use_improved_sigmoid))
-            input_layer = self.hidden_layer_output[i]
-        # For our last layer
+
+            # Set the next input nodes as the output nodes from the previously forward pass
+            input_nodes = self.hidden_layer_output[i]
+
+        # Do forward pass for the last layer
         w_k = self.ws[-1]
-        z_k = np.dot(w_k.T, self.hidden_layer_output[-1])
-        y_hat = np.exp(z_k) / (np.sum(np.exp(z_k), axis=0, keepdims=True))     # Denne er  fra A1 Equation 4
+        z_k = np.dot(w_k.T, self.hidden_layer_output[-1])  # @ = np.matmul
+        y_hat = np.exp(z_k) / (np.sum(np.exp(z_k), axis=0, keepdims=True))
         return y_hat.T
 
     def backward(self, X: np.ndarray, outputs: np.ndarray,
@@ -165,33 +174,27 @@ class SoftmaxModel:
         """
         assert targets.shape == outputs.shape,\
             f"Output shape: {outputs.shape}, targets: {targets.shape}"
-
-        delta_k = -(targets-outputs)
-        print(targets.shape)
-        print(outputs.shape)
         batch_size = X.shape[0]
 
+        # Calculate the difference between prediction and the correct value
+        delta = -(targets-outputs)  # delta_k
 
-        # Calculating the first gradient
-        first_grad = (self.hidden_layer_output[-1] @ delta_k)
-        print('delta_k before loopp ' ,delta_k.shape)
-        self.grads[-1] = np.divide(first_grad, batch_size) 
-
-        # Reversing the loop bc BACKWARD
-        # delta_j = for nåværende lag
-        # delta_k = for første laget
-        # delta_k har shape (32,10), den burde være (64,10)
+        # Calculate the gradient for the last weight
+        first_grad = (self.hidden_layer_output[-1] @ delta)
+        self.grads[-1] = np.divide(first_grad, batch_size)
+        # Do backward pass through the network
         for i in range(len(self.neurons_per_layer)-2, -1, -1):
-            print('i: ',i)
+            print("------ ", i, "-------")
             z = self.z_j[i-1]
-            print('z ', z.shape)
             z_j_prime = activation_func_prime(z, self.use_improved_sigmoid)
-            print('z_prime ',z_j_prime.shape)
-            print('self.ws i ',self.ws[i+1].shape)
-            print('delta_k' ,delta_k.shape)
-            delta_k =  (delta_k @ self.ws[i+1]) * z_j_prime
-            self.grads[i] = self.hidden_layer_output[i] @ delta_k
-            self.grads[i] = np.divide(self.grads[i], batch_size)  
+
+            # Update delta
+            delta = (delta @ self.ws[i+1].T) * z_j_prime.T
+
+            # Update the gradient
+            self.grads[i] = self.hidden_layer_output[i] @ delta
+            self.grads[i] = np.divide(self.grads[i], batch_size)
+            print(self.grads[i].shape)
 
         for grad, w in zip(self.grads, self.ws):
             assert grad.shape == w.shape,\
