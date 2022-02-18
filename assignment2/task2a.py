@@ -101,7 +101,6 @@ class SoftmaxModel:
         # TASK 3A) set weights improved or not
         self.ws = self.set_weights(self.use_improved_weight_init)
 
-
         prev = self.I
         for size in self.neurons_per_layer:
             w_shape = (prev, size)
@@ -142,12 +141,12 @@ class SoftmaxModel:
 
         # For our first layer and hidden layer of weights 
         input_layer = copy.deepcopy(X).T
+
         for i in range(len(self.neurons_per_layer)-1):
             w_j = copy.deepcopy(self.ws[i])
             self.z_j.append((input_layer.T @ w_j).T)
             self.hidden_layer_output.append(activation_func(self.z_j[i], self.use_improved_sigmoid))
             input_layer = self.hidden_layer_output[i]
-
         # For our last layer
         w_k = self.ws[-1]
         z_k = np.dot(w_k.T, self.hidden_layer_output[-1])
@@ -167,24 +166,32 @@ class SoftmaxModel:
         assert targets.shape == outputs.shape,\
             f"Output shape: {outputs.shape}, targets: {targets.shape}"
 
-        # Fra output til hidden
         delta_k = -(targets-outputs)
+        print(targets.shape)
+        print(outputs.shape)
         batch_size = X.shape[0]
 
-        z_j_prime = None
-        for i in range(len(self.neurons_per_layer), 0, -1):
-            print(i)
-            self.grads[i] = self.hidden_layer_output[i] @ delta_k
-            # Take the mean of the gradient for each node in hidden
-            self.grads[i] = np.divide(self.grads[i], batch_size)
 
-            # Fra hidden til input
-        w_k = self.ws[-1]
-        z_j_prime = activation_func_prime(self.z_j[-1], self.use_improved_sigmoid)
-    
-        delta_j = z_j_prime * (w_k @ delta_k.T)
-        self.grads[0] = (delta_j @ X).T
-        self.grads[0] = np.divide(self.grads[0], batch_size)
+        # Calculating the first gradient
+        first_grad = (self.hidden_layer_output[-1] @ delta_k)
+        print('delta_k before loopp ' ,delta_k.shape)
+        self.grads[-1] = np.divide(first_grad, batch_size) 
+
+        # Reversing the loop bc BACKWARD
+        # delta_j = for nåværende lag
+        # delta_k = for første laget
+        # delta_k har shape (32,10), den burde være (64,10)
+        for i in range(len(self.neurons_per_layer)-2, -1, -1):
+            print('i: ',i)
+            z = self.z_j[i-1]
+            print('z ', z.shape)
+            z_j_prime = activation_func_prime(z, self.use_improved_sigmoid)
+            print('z_prime ',z_j_prime.shape)
+            print('self.ws i ',self.ws[i+1].shape)
+            print('delta_k' ,delta_k.shape)
+            delta_k =  (delta_k @ self.ws[i+1]) * z_j_prime
+            self.grads[i] = self.hidden_layer_output[i] @ delta_k
+            self.grads[i] = np.divide(self.grads[i], batch_size)  
 
         for grad, w in zip(self.grads, self.ws):
             assert grad.shape == w.shape,\
