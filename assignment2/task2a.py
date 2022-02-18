@@ -103,15 +103,14 @@ class SoftmaxModel:
             prev = size
         self.grads = [None for i in range(len(self.ws))]
 
-    @staticmethod
-    def set_weights(use_improved):
+    def set_weights(self, use_improved):
         if not use_improved:
-            w0 = np.random.uniform(-1, 1, (785, 64))
-            w1 = np.random.uniform(-1, 1, (64, 10))
+            w0 = np.random.uniform(-1, 1, (785, self.neurons_per_layer[0]))
+            w1 = np.random.uniform(-1, 1, (self.neurons_per_layer[0], 10))
             return [w0, w1]
         else:
-            w0 = np.random.normal(0, 1/np.sqrt(785),(785, 64))
-            w1 = np.random.normal(0, 1/np.sqrt(64),(64, 10))
+            w0 = np.random.normal(0, 1/np.sqrt(785),(785, self.neurons_per_layer[0]))
+            w1 = np.random.normal(0, 1/np.sqrt(self.neurons_per_layer[0]),(self.neurons_per_layer[0], 10))
             return [w0, w1]
 
     def forward(self, X: np.ndarray) -> np.ndarray:
