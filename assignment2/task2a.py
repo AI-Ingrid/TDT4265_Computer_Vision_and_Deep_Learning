@@ -129,14 +129,14 @@ class SoftmaxModel:
         # Create the improved weights
         else:
             # Initialize weights from input nodes
-            ws.append(np.random.normal(0, 1/np.sqrt(785), self.neurons_per_layer[0]))
+            ws.append(np.random.normal(0, 1/np.sqrt(785), (785, self.neurons_per_layer[0])))
 
             # Initialize weights for the rest of the layers
             for index, layer in enumerate(self.neurons_per_layer):
 
                 # For the last element in neurons_per_layer
                 if layer == self.neurons_per_layer[-1]:
-                    ws.append(np.random.normal(0, 1/np.sqrt(layer), (self.neurons_per_layer[index-1], layer)))
+                    break
                 else:
                     ws.append(np.random.normal(0, 1/np.sqrt(layer), (layer, self.neurons_per_layer[index+1])))
             return ws
