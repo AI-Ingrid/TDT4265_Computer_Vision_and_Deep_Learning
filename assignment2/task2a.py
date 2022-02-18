@@ -145,22 +145,18 @@ class SoftmaxModel:
             y: output of model with shape [batch size, num_outputs]
         """
         # For the first forward pass from the input nodes
-        input_nodes = copy.deepcopy(X).T
-
+        self.hidden_layer_output.append(X)
         # Do forward pass through every layer expect the last layer
         for i in range(len(self.neurons_per_layer)-1):
             w_j = copy.deepcopy(self.ws[i])
-            self.z_j.append((input_nodes.T @ w_j).T)
+            self.z_j.append((self.hidden_layer_output[i] @ w_j))
             self.hidden_layer_output.append(activation_func(self.z_j[i], self.use_improved_sigmoid))
-
-            # Set the next input nodes as the output nodes from the previously forward pass
-            input_nodes = self.hidden_layer_output[i]
 
         # Do forward pass for the last layer
         w_k = self.ws[-1]
-        z_k = np.dot(w_k.T, self.hidden_layer_output[-1])  # @ = np.matmul
+        z_k = np.dot(self.hidden_layer_output[-1], w_k)
         y_hat = np.exp(z_k) / (np.sum(np.exp(z_k), axis=0, keepdims=True))
-        return y_hat.T
+        return y_hat
 
     def backward(self, X: np.ndarray, outputs: np.ndarray,
                  targets: np.ndarray) -> None:
@@ -180,7 +176,7 @@ class SoftmaxModel:
         delta = -(targets-outputs)  # delta_k
 
         # Calculate the gradient for the last weight
-        first_grad = (self.hidden_layer_output[-1] @ delta)
+        first_grad = (self.hidden_layer_output[-1].T @ delta)
         self.grads[-1] = np.divide(first_grad, batch_size)
         # Do backward pass through the network
         for i in range(len(self.neurons_per_layer)-2, -1, -1):
@@ -189,10 +185,10 @@ class SoftmaxModel:
             z_j_prime = activation_func_prime(z, self.use_improved_sigmoid)
 
             # Update delta
-            delta = (delta @ self.ws[i+1].T) * z_j_prime.T
+            delta = (delta @ self.ws[i+1].T) * z_j_prime
 
             # Update the gradient
-            self.grads[i] = self.hidden_layer_output[i] @ delta
+            self.grads[i] = (self.hidden_layer_output[i].T @ delta)
             self.grads[i] = np.divide(self.grads[i], batch_size)
             print(self.grads[i].shape)
 
@@ -272,7 +268,7 @@ if __name__ == "__main__":
     assert X_train.shape[1] == 785,\
         f"Expected X_train to have 785 elements per image. Shape was: {X_train.shape}"
 
-    neurons_per_layer = [64, 10]
+    neurons_per_layer = [64, 64, 10]
     use_improved_sigmoid = False
     use_improved_weight_init = False
     model = SoftmaxModel(

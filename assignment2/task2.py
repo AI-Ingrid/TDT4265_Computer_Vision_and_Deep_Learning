@@ -61,18 +61,20 @@ class SoftmaxTrainer(BaseTrainer):
         """
         # Task 2c)
         outputs = self.model.forward(X_batch)
+        print("shape outputs", outputs.shape)
         self.model.backward(X_batch, outputs, Y_batch)
+        print("shape outputs", outputs.shape)
+
+        num_gradients = len(self.model.grads)
+        use_momentum = self.use_momentum
 
         # Gradient descent
-        if self.use_momentum:
-            self.previous_grads[0] = self.model.grads[0] + self.momentum_gamma * self.previous_grads[0]
-            self.previous_grads[1] = self.model.grads[1] + self.momentum_gamma * self.previous_grads[1]
-
-            self.model.ws[0] = self.model.ws[0] - self.learning_rate * self.previous_grads[0]
-            self.model.ws[1] = self.model.ws[1] - self.learning_rate * self.previous_grads[1]
-        else:
-            self.model.ws[0] = self.model.ws[0] - self.learning_rate * self.previous_grads[0]
-            self.model.ws[1] = self.model.ws[1] - self.learning_rate * self.previous_grads[1]
+        for i in range(num_gradients):
+            if use_momentum:
+                self.previous_grads[i] = self.model.grads[i] + self.momentum_gamma * self.previous_grads[i]
+                self.model.ws[i] = self.model.ws[i] - self.learning_rate * self.previous_grads[i]
+            else:
+                self.model.ws[i] = self.model.ws[i] - self.learning_rate * self.previous_grads[i]
 
         self.previous_grads = self.model.grads
         loss = cross_entropy_loss(Y_batch, outputs)
