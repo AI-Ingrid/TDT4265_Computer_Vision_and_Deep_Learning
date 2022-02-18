@@ -61,9 +61,7 @@ class SoftmaxTrainer(BaseTrainer):
         """
         # Task 2c)
         outputs = self.model.forward(X_batch)
-        print("shape outputs", outputs.shape)
         self.model.backward(X_batch, outputs, Y_batch)
-        print("shape outputs", outputs.shape)
 
         num_gradients = len(self.model.grads)
         use_momentum = self.use_momentum
