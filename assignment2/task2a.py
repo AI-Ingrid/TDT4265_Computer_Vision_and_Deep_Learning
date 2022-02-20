@@ -1,8 +1,9 @@
 import numpy as np
 import utils
 import typing
-np.random.seed(1)
 import copy
+np.random.seed(1)
+
 
 def sigmoid(z):
     """The sigmoid function."""
@@ -39,6 +40,10 @@ def activation_func_prime(z, use_improved):
         return sigmoid_prime(z)
 
 
+def softmax(z):
+    return np.exp(z) / np.sum(np.exp(z), axis=1, keepdims=True)
+
+
 def pre_process_images(X: np.ndarray, X_std, X_mean):
     """
     Args:
@@ -73,11 +78,6 @@ def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray):
     return cross_entropy_error.mean()
 
 
-# TODO: 
-# [] vektene både i 
-# 
-
-
 class SoftmaxModel:
 
     def __init__(self,
@@ -110,23 +110,33 @@ class SoftmaxModel:
         self.grads = [None for i in range(len(self.ws))]
 
     def set_weights(self, use_improved):
+        ws = []
+        # Create 'not' improved weights
         if not use_improved:
-            ws =[]
+            # Initialize weights from input nodes
             ws.append(np.random.uniform(-1, 1, (785, self.neurons_per_layer[0])))
-            for index, layer in enumerate(self.neurons_per_layer): 
-                # If last element in neurons per layer
-                if layer==self.neurons_per_layer[-1]:
-                    ws.append(np.random.uniform(-1, 1, (self.neurons_per_layer[index-1], layer)))
+
+            # Initialize weights for the rest of the layers
+            for index, layer in enumerate(self.neurons_per_layer):
+
+                # For the last element in neurons_per_layer
+                if layer == self.neurons_per_layer[-1]:
+                    break
                 else:
                     ws.append(np.random.uniform(-1, 1, (layer, self.neurons_per_layer[index+1])))
             return ws
+
+        # Create the improved weights
         else:
-            ws =[]
-            ws.append(np.random.normal(0, 1/np.sqrt(785), self.model.neurons_per_layer[0]))
-            for index, layer in enumerate(self.model.neurons_per_layer): 
-                # If last element in neurons per layer
-                if layer==self.neurons_per_layer[-1]:
-                    ws.append(np.random.normal(0, 1/np.sqrt(layer)), (self.neurons_per_layer[index-1], layer))
+            # Initialize weights from input nodes
+            ws.append(np.random.normal(0, 1/np.sqrt(785), (785, self.neurons_per_layer[0])))
+
+            # Initialize weights for the rest of the layers
+            for index, layer in enumerate(self.neurons_per_layer):
+
+                # For the last element in neurons_per_layer
+                if layer == self.neurons_per_layer[-1]:
+                    break
                 else:
                     ws.append(np.random.normal(0, 1/np.sqrt(layer), (layer, self.neurons_per_layer[index+1])))
             return ws
@@ -138,20 +148,22 @@ class SoftmaxModel:
         Returns:
             y: output of model with shape [batch size, num_outputs]
         """
+        self.z_j = []
+        self.hidden_layer_output = []
 
-        # For our first layer and hidden layer of weights 
-        input_layer = copy.deepcopy(X).T
-
+        # For the first forward pass from the input nodes
+        self.hidden_layer_output.append(X)
+        # Do forward pass through every layer expect the last layer
         for i in range(len(self.neurons_per_layer)-1):
             w_j = copy.deepcopy(self.ws[i])
-            self.z_j.append((input_layer.T @ w_j).T)
+            self.z_j.append(self.hidden_layer_output[i] @ w_j)
             self.hidden_layer_output.append(activation_func(self.z_j[i], self.use_improved_sigmoid))
-            input_layer = self.hidden_layer_output[i]
-        # For our last layer
+
+        # Do forward pass for the last layer
         w_k = self.ws[-1]
-        z_k = np.dot(w_k.T, self.hidden_layer_output[-1])
-        y_hat = np.exp(z_k) / (np.sum(np.exp(z_k), axis=0, keepdims=True))     # Denne er  fra A1 Equation 4
-        return y_hat.T
+        z_k = np.dot(self.hidden_layer_output[-1], w_k)
+        y_hat = softmax(z_k)
+        return y_hat
 
     def backward(self, X: np.ndarray, outputs: np.ndarray,
                  targets: np.ndarray) -> None:
@@ -165,33 +177,24 @@ class SoftmaxModel:
         """
         assert targets.shape == outputs.shape,\
             f"Output shape: {outputs.shape}, targets: {targets.shape}"
-
-        delta_k = -(targets-outputs)
-        print(targets.shape)
-        print(outputs.shape)
         batch_size = X.shape[0]
+        # Calculate the difference between prediction and the correct value
+        delta = -(targets-outputs)  # delta_k
 
-
-        # Calculating the first gradient
-        first_grad = (self.hidden_layer_output[-1] @ delta_k)
-        print('delta_k before loopp ' ,delta_k.shape)
-        self.grads[-1] = np.divide(first_grad, batch_size) 
-
-        # Reversing the loop bc BACKWARD
-        # delta_j = for nåværende lag
-        # delta_k = for første laget
-        # delta_k har shape (32,10), den burde være (64,10)
+        # Calculate the gradient for the last weight
+        first_grad = (self.hidden_layer_output[-1].T @ delta)
+        self.grads[-1] = np.divide(first_grad, batch_size)
+        # Do backward pass through the network
         for i in range(len(self.neurons_per_layer)-2, -1, -1):
-            print('i: ',i)
-            z = self.z_j[i-1]
-            print('z ', z.shape)
+            z = self.z_j[i]
             z_j_prime = activation_func_prime(z, self.use_improved_sigmoid)
-            print('z_prime ',z_j_prime.shape)
-            print('self.ws i ',self.ws[i+1].shape)
-            print('delta_k' ,delta_k.shape)
-            delta_k =  (delta_k @ self.ws[i+1]) * z_j_prime
-            self.grads[i] = self.hidden_layer_output[i] @ delta_k
-            self.grads[i] = np.divide(self.grads[i], batch_size)  
+
+            # Update delta
+            delta = (delta @ self.ws[i+1].T) * z_j_prime
+
+            # Update the gradient
+            self.grads[i] = (self.hidden_layer_output[i].T @ delta)
+            self.grads[i] = np.divide(self.grads[i], batch_size)
 
         for grad, w in zip(self.grads, self.ws):
             assert grad.shape == w.shape,\
@@ -269,7 +272,7 @@ if __name__ == "__main__":
     assert X_train.shape[1] == 785,\
         f"Expected X_train to have 785 elements per image. Shape was: {X_train.shape}"
 
-    neurons_per_layer = [64, 10]
+    neurons_per_layer = [64, 64, 10]
     use_improved_sigmoid = False
     use_improved_weight_init = False
     model = SoftmaxModel(

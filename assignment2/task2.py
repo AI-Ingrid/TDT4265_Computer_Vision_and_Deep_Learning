@@ -63,16 +63,16 @@ class SoftmaxTrainer(BaseTrainer):
         outputs = self.model.forward(X_batch)
         self.model.backward(X_batch, outputs, Y_batch)
 
-        # Gradient descent
-        if self.use_momentum:
-            self.previous_grads[0] = self.model.grads[0] + self.momentum_gamma * self.previous_grads[0]
-            self.previous_grads[1] = self.model.grads[1] + self.momentum_gamma * self.previous_grads[1]
+        num_gradients = len(self.model.grads)
+        use_momentum = self.use_momentum
 
-            self.model.ws[0] = self.model.ws[0] - self.learning_rate * self.previous_grads[0]
-            self.model.ws[1] = self.model.ws[1] - self.learning_rate * self.previous_grads[1]
-        else:
-            self.model.ws[0] = self.model.ws[0] - self.learning_rate * self.previous_grads[0]
-            self.model.ws[1] = self.model.ws[1] - self.learning_rate * self.previous_grads[1]
+        # Gradient descent
+        for i in range(num_gradients):
+            if use_momentum:
+                self.previous_grads[i] = self.model.grads[i] + self.momentum_gamma * self.previous_grads[i]
+                self.model.ws[i] = self.model.ws[i] - self.learning_rate * self.previous_grads[i]
+            else:
+                self.model.ws[i] = self.model.ws[i] - self.learning_rate * self.previous_grads[i]
 
         self.previous_grads = self.model.grads
         loss = cross_entropy_loss(Y_batch, outputs)
@@ -111,9 +111,9 @@ if __name__ == "__main__":
     shuffle_data = True
 
     # Settings for task 3. Keep all to false for task 2.
-    use_improved_sigmoid = False
-    use_improved_weight_init = False
-    use_momentum = False
+    use_improved_sigmoid = True
+    use_improved_weight_init = True
+    use_momentum = True
 
     # Load dataset
     X_train, Y_train, X_val, Y_val = utils.load_full_mnist()
@@ -148,7 +148,7 @@ if __name__ == "__main__":
     # Plot loss for first model (task 2c)
     plt.figure(figsize=(20, 12))
     plt.subplot(1, 2, 1)
-    plt.ylim([0.1, .6])
+    plt.ylim([0.0, .3])
     utils.plot_loss(train_history["loss"],
                     "Training Loss", npoints_to_average=10)
     utils.plot_loss(val_history["loss"], "Validation Loss")
@@ -158,12 +158,12 @@ if __name__ == "__main__":
 
     # Plot accuracy
     plt.subplot(1, 2, 2)
-    plt.ylim([0.85, 0.96])
+    plt.ylim([0.90, 1.])
     utils.plot_loss(train_history["accuracy"], "Training Accuracy")
     utils.plot_loss(val_history["accuracy"], "Validation Accuracy")
     plt.xlabel("Number of Training Steps")
     plt.ylabel("Accuracy")
     plt.legend()
-    #plt.savefig("task4a_train_loss_32_TTT.png")
-    #plt.show()
+    plt.savefig("task4c_train_loss_TTT.png")
+    plt.show()
 
