@@ -18,7 +18,7 @@ class ExampleModel(nn.Module):
                 num_classes: Number of classes we want to predict (10)
         """
         super().__init__()
-        # TODO: Implement this function (Task  2a)
+        # Task 2a - Initialize the neural network
         num_filters = [32, 64, 128]  # Set number of filters in first conv layer
         self.num_classes = num_classes
         # Defining the neural network
@@ -64,6 +64,7 @@ class ExampleModel(nn.Module):
         # included with nn.CrossEntropyLoss
         self.classifier = nn.Sequential(
             nn.Linear(self.num_output_features, num_classes),
+            # Studass: Vetke om dette stemmer? Added ReLu
             nn.ReLU(inplace=True),
         )
 
@@ -75,6 +76,11 @@ class ExampleModel(nn.Module):
         """
         # TODO: Implement this function (Task  2a)
         batch_size = x.shape[0]
+
+        x = self.feature_extractor(x)
+        x = self.classifier(x)
+        x = self.view(batch_size,  self.num_classes)
+
         out = x
         expected_shape = (batch_size, self.num_classes)
         assert out.shape == (batch_size, self.num_classes),\
