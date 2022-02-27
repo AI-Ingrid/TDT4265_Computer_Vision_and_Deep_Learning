@@ -1,10 +1,11 @@
+from doctest import OutputChecker
 import torch
 import typing
 import time
 import collections
 import utils
 import pathlib
-
+import numpy as np
 
 def compute_loss_and_accuracy(
         dataloader: torch.utils.data.DataLoader,
@@ -22,17 +23,29 @@ def compute_loss_and_accuracy(
     """
     average_loss = 0
     accuracy = 0
+    num_samples = 0
     # TODO: Implement this function (Task  2a)
     with torch.no_grad():
+
         for (X_batch, Y_batch) in dataloader:
+            
             # Transfer images/labels to GPU VRAM, if possible
             X_batch = utils.to_cuda(X_batch)
             Y_batch = utils.to_cuda(Y_batch)
             # Forward pass the images through our model
             output_probs = model(X_batch)
 
-            # Compute Loss and Accuracy
+            # Compute Accuracy
+            _, predictions = torch.max(output_probs, 1)
+            num_samples += Y_batch.shape[0]
+            accuracy += (Y_batch == predictions).sum().item()
 
+            # Compute Loss
+            loss = loss_criterion(output_probs, Y_batch)
+
+    accuracy = accuracy/num_samples
+    print(f'Accuracy of the network: {accuracy*100} %')
+    print(f'Loss of the network: {loss}')
     return average_loss, accuracy
 
 
@@ -137,6 +150,9 @@ class Trainer:
         # X_batch is the CIFAR10 images. Shape: [batch_size, 3, 32, 32]
         # Y_batch is the CIFAR10 image label. Shape: [batch_size]
         # Transfer images / labels to GPU VRAM, if possible
+
+        # Shape is [64, 3, 32, 32]
+        # Er av typen <class 'torch.Tensor'>
         X_batch = utils.to_cuda(X_batch)
         Y_batch = utils.to_cuda(Y_batch)
 
