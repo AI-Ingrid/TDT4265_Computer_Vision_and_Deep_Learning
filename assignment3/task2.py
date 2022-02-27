@@ -19,17 +19,41 @@ class ExampleModel(nn.Module):
         """
         super().__init__()
         # TODO: Implement this function (Task  2a)
-        num_filters = 32  # Set number of filters in first conv layer
+        num_filters = [32, 64, 128]  # Set number of filters in first conv layer
         self.num_classes = num_classes
-        # Define the convolutional layers
+        # Defining the neural network
         self.feature_extractor = nn.Sequential(
+            # First convolutional layer
             nn.Conv2d(
                 in_channels=image_channels,
-                out_channels=num_filters,
+                out_channels=num_filters[0],
                 kernel_size=5,
                 stride=1,
                 padding=2
-            )
+            ),
+            # First max pool
+            nn.MaxPool2d(stride=2, kernel_size=2),
+            # Second convolutional layer
+            nn.Conv2d(
+                in_channels=num_filters[0],
+                out_channels=num_filters[1],
+                kernel_size=5,
+                stride=1,
+                padding=2
+            ),
+            # Second max pool
+            nn.MaxPool2d(stride=2, kernel_size=2),
+            # Third convolutional layer
+            nn.Conv2d(
+                in_channels=num_filters[1],
+                out_channels=num_filters[2],
+                kernel_size=5,
+                stride=1,
+                padding=2
+            ),
+            # Third max pool
+            nn.MaxPool2d(stride=2, kernel_size=2),
+
         )
         # The output of feature_extractor will be [batch_size, num_filters, 16, 16]
         self.num_output_features = 32*32*32
@@ -40,6 +64,7 @@ class ExampleModel(nn.Module):
         # included with nn.CrossEntropyLoss
         self.classifier = nn.Sequential(
             nn.Linear(self.num_output_features, num_classes),
+            nn.ReLU(inplace=True),
         )
 
     def forward(self, x):
