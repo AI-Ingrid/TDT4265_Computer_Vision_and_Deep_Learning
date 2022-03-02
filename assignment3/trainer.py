@@ -24,6 +24,7 @@ def compute_loss_and_accuracy(
     average_loss = 0
     accuracy = 0
     num_samples = 0
+
     # TODO: Implement this function (Task  2a)
     with torch.no_grad():
 
@@ -32,6 +33,7 @@ def compute_loss_and_accuracy(
             # Transfer images/labels to GPU VRAM, if possible
             X_batch = utils.to_cuda(X_batch)
             Y_batch = utils.to_cuda(Y_batch)
+
             # Forward pass the images through our model
             output_probs = model(X_batch)
 
@@ -41,11 +43,11 @@ def compute_loss_and_accuracy(
             accuracy += (Y_batch == predictions).sum().item()
 
             # Compute Loss
-            loss = loss_criterion(output_probs, Y_batch)
+            average_loss = loss_criterion(output_probs, Y_batch)
 
     accuracy = accuracy/num_samples
     print(f'Accuracy of the network: {accuracy*100} %')
-    print(f'Loss of the network: {loss}')
+    print(f'Loss of the network: {average_loss}')
     return average_loss, accuracy
 
 

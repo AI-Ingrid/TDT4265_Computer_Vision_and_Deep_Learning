@@ -18,9 +18,11 @@ class ExampleModel(nn.Module):
                 num_classes: Number of classes we want to predict (10)
         """
         super().__init__()
+
         # Task 2a - Initialize the neural network
         num_filters = [32, 64, 128]  # Set number of filters in first conv layer
         self.num_classes = num_classes
+
         # Defining the neural network
         self.feature_extractor = nn.Sequential(
             # First convolutional layer
@@ -31,8 +33,10 @@ class ExampleModel(nn.Module):
                 stride=1,
                 padding=2
             ),
+
             # First max pool
             nn.MaxPool2d(stride=2, kernel_size=2),
+
             # Second convolutional layer
             nn.Conv2d(
                 in_channels=num_filters[0],
@@ -41,8 +45,10 @@ class ExampleModel(nn.Module):
                 stride=1,
                 padding=2
             ),
+
             # Second max pool
             nn.MaxPool2d(stride=2, kernel_size=2),
+
             # Third convolutional layer
             nn.Conv2d(
                 in_channels=num_filters[1],
@@ -51,6 +57,7 @@ class ExampleModel(nn.Module):
                 stride=1,
                 padding=2
             ),
+
             # Third max pool
             nn.MaxPool2d(stride=2, kernel_size=2),
 
@@ -63,9 +70,9 @@ class ExampleModel(nn.Module):
         # There is no need for softmax activation function, as this is
         # included with nn.CrossEntropyLoss
         self.classifier = nn.Sequential(
-            nn.Linear(self.num_output_features, num_classes),
-            # Studass: Vetke om dette stemmer? Added ReLu
+            nn.Linear(4*4*128, 64),
             nn.ReLU(inplace=True),
+            nn.Linear(64, num_classes),
         )
 
     def forward(self, x):
@@ -78,10 +85,12 @@ class ExampleModel(nn.Module):
         batch_size = x.shape[0]
 
         x = self.feature_extractor(x)
+        # Flatten
+        x = x.view(batch_size, -1)
         x = self.classifier(x)
-        x = self.view(batch_size,  self.num_classes)
 
         out = x
+
         expected_shape = (batch_size, self.num_classes)
         assert out.shape == (batch_size, self.num_classes),\
             f"Expected output of forward pass to be: {expected_shape}, but got: {out.shape}"
@@ -113,7 +122,7 @@ def main():
     epochs = 10
     batch_size = 64
     learning_rate = 5e-2
-    early_stop_count = 4
+    early_stop_count = 5
     dataloaders = load_cifar10(batch_size)
     model = ExampleModel(image_channels=3, num_classes=10)
     trainer = Trainer(
@@ -125,7 +134,7 @@ def main():
         dataloaders
     )
     trainer.train()
-    create_plots(trainer, "task2")
+    create_plots(trainer, "task2_1")
 
 if __name__ == "__main__":
     main()
