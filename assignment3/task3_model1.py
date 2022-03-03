@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import utils
 from torch import nn
 from dataloaders import load_cifar10
-from trainer3 import Trainer
+from trainer3 import Trainer, compute_loss_and_accuracy
 
 
 class Model1(nn.Module):
@@ -140,7 +140,19 @@ def main():
         dataloaders
     )
     trainer.train()
+
+    trainer.load_best_model()
     create_plots(trainer, "3a")
+
+    train, validation, test = dataloaders
+
+    print("---- TRAINING ----")
+    train_loss, train_acc = compute_loss_and_accuracy(train, model, nn.CrossEntropyLoss())
+    print("---- VALIDATION ----")
+    val_loss, val_acc = compute_loss_and_accuracy(validation, model, nn.CrossEntropyLoss())
+    print("---- TEST ----")
+    test_loss, test_acc = compute_loss_and_accuracy(test, model, nn.CrossEntropyLoss())
+
 
 if __name__ == "__main__":
     main()
