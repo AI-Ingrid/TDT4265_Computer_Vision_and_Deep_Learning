@@ -117,7 +117,7 @@ def create_plots(trainer: Trainer, name: str):
     plt.title("Accuracy")
     utils.plot_loss(trainer.validation_history["accuracy"], label="Validation Accuracy")
     plt.legend()
-    plt.savefig(plot_path.joinpath(f"{name}_plot.png"))
+    plt.savefig(plot_path.joinpath(f"{name}_model1.png"))
     plt.show()
 
 
@@ -140,7 +140,7 @@ def main():
         dataloaders
     )
     trainer.train()
-    create_plots(trainer, "task3_1")
+    create_plots(trainer, "3a")
 
 if __name__ == "__main__":
     main()
