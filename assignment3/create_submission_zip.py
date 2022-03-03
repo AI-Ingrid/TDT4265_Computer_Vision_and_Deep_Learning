@@ -21,9 +21,11 @@ def query(question, options):
 # If you create other files, edit this list to include them in the .zip file.
 files_to_include = {
     "task2": [".py"],
+    "task3" : [".py"],
     "task2_train": [".ipynb"],
     "task4b": [".py"],
     "trainer": [".py"],
+    "trainer3" : [".py"],
     "utils": [".py"],
     "dataloaders": [".py"]
 }
