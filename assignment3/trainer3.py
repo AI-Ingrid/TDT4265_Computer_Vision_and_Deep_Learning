@@ -43,8 +43,9 @@ def compute_loss_and_accuracy(
             accuracy += (Y_batch == predictions).sum().item()
 
             # Compute Loss
-            average_loss = loss_criterion(output_probs, Y_batch)
-
+            average_loss += loss_criterion(output_probs, Y_batch)
+    
+    average_loss = average_loss/num_samples
     accuracy = accuracy/num_samples
     print(f'Accuracy of the network: {accuracy*100} %')
     print(f'Loss of the network: {average_loss}')
