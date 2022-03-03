@@ -132,7 +132,7 @@ def create_plots(trainer: Trainer, name: str):
     plt.title("Accuracy")
     utils.plot_loss(trainer.validation_history["accuracy"], label="Validation Accuracy")
     plt.legend()
-    plt.savefig(plot_path.joinpath(f"{name}_plot.png"))
+    plt.savefig(plot_path.joinpath(f"{name}_model2.png"))
     plt.show()
 
 
@@ -143,7 +143,7 @@ def main():
     epochs = 10
     batch_size = 64
     learning_rate = 5e-2
-    early_stop_count = 3
+    early_stop_count = 4
     dataloaders = load_cifar10(batch_size)
     model = Model2(image_channels=3, num_classes=10)
     trainer = Trainer(

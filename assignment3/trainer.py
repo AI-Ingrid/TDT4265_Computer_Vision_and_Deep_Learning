@@ -24,7 +24,7 @@ def compute_loss_and_accuracy(
     average_loss = 0
     accuracy = 0
     num_samples = 0
-
+    batch_size = 0
     # TODO: Implement this function (Task  2a)
     with torch.no_grad():
 
@@ -44,8 +44,9 @@ def compute_loss_and_accuracy(
 
             # Compute Loss
             average_loss += loss_criterion(output_probs, Y_batch)
-
-    average_loss = average_loss/num_samples
+            batch_size += 1
+    
+    average_loss = average_loss/batch_size
     accuracy = accuracy/num_samples
     print(f'Accuracy of the network: {accuracy*100} %')
     print(f'Loss of the network: {average_loss}')
