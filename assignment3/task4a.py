@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import utils
 from torch import nn
 # TODO: We need to fix new dataloaders and trainer
-from dataloaders import load_cifar10
-from trainer import Trainer, compute_loss_and_accuracy
+from dataloaders4a import load_cifar10
+from trainer4a import Trainer, compute_loss_and_accuracy
 
 
 class ResNet(nn.Module):
