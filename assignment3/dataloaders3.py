@@ -21,14 +21,8 @@ def load_cifar10_3(batch_size: int, validation_fraction: float = 0.1
     # Note that transform train will apply the same transform for
     # validation!
 
-    # Transform training data with and without aumentation
-    # Transform without data augmentation
-    transform_train = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize(mean, std),
-    ])
     # Transform with data augmentation
-    transform_train_augmentation = transforms.Compose([
+    transform_train = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize(mean, std),
         transforms.RandomHorizontalFlip(p=0.4),
@@ -41,14 +35,7 @@ def load_cifar10_3(batch_size: int, validation_fraction: float = 0.1
                                   train=True,
                                   download=True,
                                   transform=transform_train)
-
-    data_train_augmentation = datasets.CIFAR10(get_data_dir(),
-                                  train=True,
-                                  download=True,
-                                  transform=transform_train_augmentation)
-    # Set the two data train sets (with and without augmentation) together to get more train data
-    data_train = torch.utils.data.ConcatDataset((data_train,data_train_augmentation))
-
+                                  
     data_test = datasets.CIFAR10(get_data_dir(),
                                  train=False,
                                  download=True,

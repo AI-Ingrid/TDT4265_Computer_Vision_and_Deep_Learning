@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import utils
 from torch import nn
 from dataloaders3 import load_cifar10_3
-from trainer3 import Trainer3, compute_loss_and_accuracy
+from trainer3e import Trainer3, compute_loss_and_accuracy
 
 
 class Model2(nn.Module):
@@ -24,7 +24,7 @@ class Model2(nn.Module):
 
         # Defining the neural network
         self.feature_extractor = nn.Sequential(
-            # First convolutional layer
+            # First layer
             nn.Conv2d(
                 in_channels=image_channels,
                 out_channels=32,
@@ -33,13 +33,21 @@ class Model2(nn.Module):
                 padding=2
             ),
             nn.BatchNorm2d(32),
-            nn.ReLU(inplace=True), #TODO inplace=true
-            # First max pool
+            nn.Hardswish(inplace=True), 
             nn.MaxPool2d(stride=2, kernel_size=2),
+
+            # Second layer no MaxPooling
+            nn.Conv2d(
+                in_channels=32,
+                out_channels=32,
+                kernel_size=5,
+                stride=1,
+                padding=2
+            ),
+            nn.BatchNorm2d(32),
+            nn.Hardswish(inplace=True), 
             
-
-
-            # Second convolutional layer
+            # Third layer
             nn.Conv2d(
                 in_channels=32,
                 out_channels=64,
@@ -48,23 +56,10 @@ class Model2(nn.Module):
                 padding=2
             ),
             nn.BatchNorm2d(64),
-            nn.Hardswish(inplace=True), #TODO inplace=true
-
-            # Second max pool
+            nn.Hardswish(inplace=True), 
             nn.MaxPool2d(stride=2, kernel_size=2),
-
-            # Third convolutional layer
-            nn.Conv2d(
-                in_channels=64,
-                out_channels=64,
-                kernel_size=5,
-                stride=1,
-                padding=2
-            ),
-            nn.BatchNorm2d(64),
-            nn.ReLU(inplace=True),
-            
-            # Fourth convolutional layer
+           
+            # Fourth layer
             nn.Conv2d(
                 in_channels=64,
                 out_channels=128,
@@ -73,14 +68,10 @@ class Model2(nn.Module):
                 padding=2
             ),
             nn.BatchNorm2d(128),
-            nn.Hardswish(inplace=True), #TODO inplace=true
-
-            # Third max pool
+            nn.Hardswish(inplace=True), 
             nn.MaxPool2d(stride=2, kernel_size=2),
 
-            
-
-            # Fifth convolutional layer
+            # Fifth layer
             nn.Conv2d(
                 in_channels=128,
                 out_channels=256,
@@ -89,12 +80,8 @@ class Model2(nn.Module):
                 padding=2
             ),
             nn.BatchNorm2d(256),
-            nn.Hardswish(inplace=True), #TODO inplace=true
-
-            # Fourth max pool
+            nn.Hardswish(inplace=True), 
             nn.MaxPool2d(stride=2, kernel_size=2),
-
-
         )
         # The output of feature_extractor will be [batch_size, num_filters, 16, 16]
         self.num_output_features = 32*32*32
@@ -104,10 +91,19 @@ class Model2(nn.Module):
         # There is no need for softmax activation function, as this is
         # included with nn.CrossEntropyLoss
         self.classifier = nn.Sequential(
+            # First FC layer
             nn.Linear(2*2*256, 64),
             nn.BatchNorm1d(64),
-            nn.ReLU(),
-            nn.Linear(64, num_classes),
+            nn.SiLU(inplace=True),
+            
+            # Second FC layer
+            nn.Linear(64, 32),
+            nn.BatchNorm1d(32),
+            nn.SiLU(inplace=True),
+
+            # Third FC layer
+            nn.Linear(32, num_classes),
+            
         )
 
     def forward(self, x):
