@@ -10,10 +10,10 @@ from trainer4a import Trainer, compute_loss_and_accuracy
 
 
 class ResNet(nn.Module):
-    def __init__(self, num_classes, image_channels):
+    def __init__(self):
         super().__init__()
         self.model = torchvision.models.resnet18(pretrained=True)
-        self.model.fc = nn.Linear(512)
+        self.model.fc = nn.Linear(512, 10)
         
         for param in self.model.parameters():
             param.requires_grad = False
@@ -22,34 +22,10 @@ class ResNet(nn.Module):
         for param in self.model.layer4.parameters():
             param.requires_grad = True 
 
-        # Task 4a - Initialize the neural network
-        self.num_classes = 10
-
-
-        # Defining the neural network
-
-
-
     def forward(self, x):
-        """
-        Performs a forward pass through the model
-        Args:
-            x: Input image, shape: [batch_size, 3, 32, 32]
-        """
-        batch_size = x.shape[0]
+        return self.model(x)
 
-        x = self.model(x)
-        # Flatten
-        x = x.view(batch_size, -1)
-        x = self.classifier(x)
-
-        out = x
-
-        expected_shape = (batch_size, self.num_classes)
-        assert out.shape == (batch_size, self.num_classes),\
-            f"Expected output of forward pass to be: {expected_shape}, but got: {out.shape}"
-        return out
-
+    
 
 def create_plots(trainer: Trainer, name: str):
     plot_path = pathlib.Path("plots")
@@ -73,12 +49,12 @@ def main():
     # Set the random generator seed (parameters, shuffling etc).
     # You can try to change this and check if you still get the same result! 
     utils.set_seed(0)
-    epochs = 10
-    batch_size = 64
-    learning_rate = 5e-2
+    epochs = 5
+    batch_size = 32
+    learning_rate = 5e-4
     early_stop_count = 5
     dataloaders = load_cifar10(batch_size)
-    model = ResNet(image_channels=3, num_classes=10)
+    model = ResNet()
     trainer = Trainer(
         batch_size,
         learning_rate,
@@ -88,7 +64,7 @@ def main():
         dataloaders
     )
     trainer.train()
-    create_plots(trainer, "2b")
+    create_plots(trainer, "4a")
     
     # (2b) Report for final training
     train, validation, test = dataloaders
