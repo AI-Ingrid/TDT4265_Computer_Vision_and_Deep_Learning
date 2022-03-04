@@ -2,8 +2,8 @@ import pathlib
 import matplotlib.pyplot as plt
 import utils
 from torch import nn
-from dataloaders import load_cifar10
-from trainer3 import Trainer, compute_loss_and_accuracy
+from dataloaders3 import load_cifar10_3
+from trainer3 import Trainer3, compute_loss_and_accuracy
 
 
 class Model2(nn.Module):
@@ -20,7 +20,7 @@ class Model2(nn.Module):
         super().__init__()
 
         # Task 2a - Initialize the neural network
-        num_filters = [32, 64, 128, 256]  # Set number of filters in first conv layer
+        num_filters = [32, 64, 64, 64, 128, 256]  # Set number of filters in first conv layer
         self.num_classes = num_classes
 
         # Defining the neural network
@@ -28,60 +28,74 @@ class Model2(nn.Module):
             # First convolutional layer
             nn.Conv2d(
                 in_channels=image_channels,
-                out_channels=num_filters[0],
-                kernel_size=3,
+                out_channels=32,
+                kernel_size=5,
                 stride=1,
                 padding=2
             ),
-            nn.BatchNorm2d(num_filters[0]),
+            nn.BatchNorm2d(32),
             nn.SiLU(), #TODO inplace=true
-            # First max pool
             nn.MaxPool2d(stride=2, kernel_size=2),
 
             # Second convolutional layer
             nn.Conv2d(
-                in_channels=num_filters[0],
-                out_channels=num_filters[1],
+                in_channels=32,
+                out_channels=64,
                 kernel_size=3,
                 stride=1,
                 padding=2
             ),
-            nn.BatchNorm2d(num_filters[1]),
+            nn.BatchNorm2d(64),
             nn.Hardswish(inplace=True), #TODO inplace=true
+            nn.MaxPool2d(stride=2, kernel_size=3),
 
-            # Second max pool
-            nn.MaxPool2d(stride=1, kernel_size=3),
-
-            # Third convolutional layer
+            # Third conv
             nn.Conv2d(
-                in_channels=num_filters[1],
-                out_channels=num_filters[2],
+                in_channels=64
+                out_channels=64,
                 kernel_size=3,
                 stride=1,
-                padding=2
+                padding=1
             ),
-            nn.BatchNorm2d(num_filters[2]),
-            nn.Hardswish(inplace=True), #TODO inplace=true
-
-            # Third max pool
-            nn.MaxPool2d(stride=1, kernel_size=3),
-
-            # Fourth convolutional layer
+            nn.BatchNorm2d(64),
+            nn.ReLU(inplace=True), #TODO inplace=true
+            
+            # Fourth conv
             nn.Conv2d(
-                in_channels=num_filters[2],
-                out_channels=num_filters[3],
+                in_channels=64,
+                out_channels=64,
                 kernel_size=3,
                 stride=1,
                 padding=2
             ),
-            nn.BatchNorm2d(num_filters[3]),
+            nn.BatchNorm2d(64),
+            nn.ReLU(inplace=True), #TODO inplace=true
+
+            # Fifth convolutional layer
+            nn.Conv2d(
+                in_channels=64,
+                out_channels=128,
+                kernel_size=3,
+                stride=1,
+                padding=2
+            ),
+            nn.BatchNorm2d(128),
             nn.Hardswish(inplace=True), #TODO inplace=true
+            nn.MaxPool2d(stride=2, kernel_size=2),
 
-            # Fourth max pool
+            # Sixth convolutional layer
+            nn.Conv2d(
+                in_channels=128,
+                out_channels=256,
+                kernel_size=3,
+                stride=1,
+                padding=2
+            ),
+            nn.BatchNorm2d(256),
+            nn.Hardswish(inplace=True), #TODO inplace=true
             nn.MaxPool2d(stride=1, kernel_size=3),
-
-
         )
+        
         # The output of feature_extractor will be [batch_size, num_filters, 16, 16]
         self.num_output_features = 32*32*32
         # Initialize our last fully connected layer
@@ -118,7 +132,7 @@ class Model2(nn.Module):
         return out
 
 
-def create_plots(trainer: Trainer, name: str):
+def create_plots(trainer: Trainer3, name: str):
     plot_path = pathlib.Path("plots")
     plot_path.mkdir(exist_ok=True)
     # Save plots and show them
@@ -144,9 +158,9 @@ def main():
     batch_size = 64
     learning_rate = 5e-2
     early_stop_count = 4
-    dataloaders = load_cifar10(batch_size)
+    dataloaders = load_cifar10_3(batch_size)
     model = Model2(image_channels=3, num_classes=10)
-    trainer = Trainer(
+    trainer = Trainer3(
         batch_size,
         learning_rate,
         early_stop_count,
