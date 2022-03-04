@@ -22,12 +22,13 @@ def load_cifar10(batch_size: int, validation_fraction: float = 0.1
     # validation!
     transform_train = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize(mean, std),
+        # Changed this given our hints in 4a
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        transforms.Resize(size=[112,112])
     ])
     transform_test = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize(mean, std),
-        transforms.Resize(size=[112,112])
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
     data_train = datasets.CIFAR10(get_data_dir(),
                                   train=True,
