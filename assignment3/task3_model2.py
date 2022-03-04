@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import utils
 from torch import nn
 from dataloaders import load_cifar10
-from trainer3 import Trainer, compute_loss_and_accuracy
+from trainer3a import Trainer3, compute_loss_and_accuracy
 
 
 class Model2(nn.Module):
@@ -34,7 +34,7 @@ class Model2(nn.Module):
                 padding=2
             ),
             nn.BatchNorm2d(num_filters[0]),
-            nn.SiLU(), #TODO inplace=true
+            nn.Hardswish(inplace=True), #TODO inplace=true
             # First max pool
             nn.MaxPool2d(stride=2, kernel_size=2),
 
@@ -118,7 +118,7 @@ class Model2(nn.Module):
         return out
 
 
-def create_plots(trainer: Trainer, name: str):
+def create_plots(trainer: Trainer3, name: str):
     plot_path = pathlib.Path("plots")
     plot_path.mkdir(exist_ok=True)
     # Save plots and show them
@@ -135,6 +135,23 @@ def create_plots(trainer: Trainer, name: str):
     plt.savefig(plot_path.joinpath(f"{name}_model2.png"))
     plt.show()
 
+def create_plots_3b(trainer: Trainer3, name: str):
+    plot_path = pathlib.Path("plots")
+    plot_path.mkdir(exist_ok=True)
+    # Save plots and show them
+    plt.figure(figsize=(20, 8))
+    plt.subplot(1, 2, 1)
+    plt.title("Validation accuracy per training step")
+    utils.plot_loss(trainer.validation_history["accuracy"], label="Validation Accuracy")
+    plt.legend()
+    plt.subplot(1, 2, 2)
+    plt.title("Training loss and validation loss per training step")
+    utils.plot_loss(trainer.train_history["loss"], label="Train Loss")
+    utils.plot_loss(trainer.validation_history["loss"], label="Validation Loss")
+    plt.legend()
+    plt.savefig(plot_path.joinpath(f"{name}_model2.png"))
+    plt.show()
+
 
 def main():
     # Set the random generator seed (parameters, shuffling etc).
@@ -142,11 +159,11 @@ def main():
     utils.set_seed(0)
     epochs = 10
     batch_size = 64
-    learning_rate = 5e-2
-    early_stop_count = 4
+    learning_rate = 6e-2
+    early_stop_count = 3
     dataloaders = load_cifar10(batch_size)
     model = Model2(image_channels=3, num_classes=10)
-    trainer = Trainer(
+    trainer = Trainer3(
         batch_size,
         learning_rate,
         early_stop_count,
@@ -157,7 +174,8 @@ def main():
     trainer.train()
     trainer.load_best_model()
     
-    create_plots(trainer, "task3_2")
+    create_plots(trainer, "3a")
+    create_plots_3b(trainer, "3b")
 
     train, validation, test = dataloaders
 

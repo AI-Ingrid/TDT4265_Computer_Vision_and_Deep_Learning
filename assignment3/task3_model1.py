@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import utils
 from torch import nn
 from dataloaders import load_cifar10
-from trainer3 import Trainer, compute_loss_and_accuracy
+from trainer3a import Trainer3, compute_loss_and_accuracy
 
 
 class Model1(nn.Module):
@@ -34,7 +34,7 @@ class Model1(nn.Module):
                 padding=2
             ),
             nn.BatchNorm2d(num_filters[0]),
-            nn.ReLU(inplace=True), #TODO inplace=true
+            nn.Hardswish(inplace=True), #TODO inplace=true
             # First max pool
             nn.MaxPool2d(stride=2, kernel_size=2),
 
@@ -103,7 +103,7 @@ class Model1(nn.Module):
         return out
 
 
-def create_plots(trainer: Trainer, name: str):
+def create_plots(trainer: Trainer3, name: str):
     plot_path = pathlib.Path("plots")
     plot_path.mkdir(exist_ok=True)
     # Save plots and show them
@@ -131,7 +131,7 @@ def main():
     early_stop_count = 5
     dataloaders = load_cifar10(batch_size)
     model = Model1(image_channels=3, num_classes=10)
-    trainer = Trainer(
+    trainer = Trainer3(
         batch_size,
         learning_rate,
         early_stop_count,
