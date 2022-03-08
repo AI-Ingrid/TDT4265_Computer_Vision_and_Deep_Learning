@@ -15,12 +15,26 @@ def calculate_iou(prediction_box, gt_box):
         returns:
             float: value of the intersection of union for the two boxes.
     """
-    # YOUR CODE HERE
+    x1 = max(prediction_box[0], gt_box[0])
+    y1 = max(prediction_box[1], gt_box[1])
+    x2 = min(prediction_box[2], gt_box[2])
+    y2 = min(prediction_box[3], gt_box[3])
 
     # Compute intersection
+    width = x2 - x1
+    height = y2 - y1
+
+    # Handling case where there is no overlap 
+    if (width < 0) or (height < 0):
+        return 0.0
+    overlap = width * height
 
     # Compute union
-    iou = 0
+    area_pred = (prediction_box[2] - prediction_box[0]) * (prediction_box[3] - prediction_box[1])
+    area_gt_box = (gt_box[2] - gt_box[0]) * (gt_box[3] - gt_box[1])
+    area = area_pred + area_gt_box - overlap
+
+    iou = overlap / area
     assert iou >= 0 and iou <= 1
     return iou
 
