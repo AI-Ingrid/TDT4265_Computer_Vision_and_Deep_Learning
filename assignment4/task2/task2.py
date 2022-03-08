@@ -94,10 +94,14 @@ def get_all_box_matches(prediction_boxes, gt_boxes, iou_threshold):
             Each row includes [xmin, ymin, xmax, ymax]
     """
     # Find all possible matches with a IoU >= iou threshold
-
+    matches = []
+    for predicted_box, gt_box in zip(prediction_boxes, gt_boxes):
+        iou = calculate_iou(predicted_box, gt_box)
+        if (iou >= iou_threshold):
+            matches.append((iou, predicted_box))
 
     # Sort all matches on IoU in descending order
-
+    
     # Find all matches with the highest IoU threshold
 
 
