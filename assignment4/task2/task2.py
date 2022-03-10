@@ -94,19 +94,39 @@ def get_all_box_matches(prediction_boxes, gt_boxes, iou_threshold):
             Each row includes [xmin, ymin, xmax, ymax]
     """
     # Find all possible matches with a IoU >= iou threshold
+    # Initialize list   
+    # TODO: If something goes wrong, check here :))))))) 
     matches = []
-    for predicted_box, gt_box in zip(prediction_boxes, gt_boxes):
-        iou = calculate_iou(predicted_box, gt_box)
-        if (iou >= iou_threshold):
-            matches.append((iou, predicted_box))
+    for gt_index, gt_box in enumerate(gt_boxes):
+        best_iou = 0
+        
+        for pred_index, pred_box in enumerate(prediction_boxes):
 
-    # Sort all matches on IoU in descending order
+            iou = calculate_iou(pred_box, gt_box)
+            # Find all matches with the highest IoU threshold
+            if (iou >= iou_threshold and iou > best_iou):
+                matches.append([iou, pred_index, gt_index])
+
+                
+    # Handle no matches
+    if matches == []:
+        return np.ndarray(shape=(0,0)), np.ndarray(shape=(0,0))
     
-    # Find all matches with the highest IoU threshold
+    # Sort all matches on IoU in descending order
+    matches.sort(key=lambda tup: tup[0], reverse=True) # TODO: Does this work?
+    
+    final_pred_boxes = []
+    final_gt_boxes = []
+    
+    # Use indices to add the boxes
+    for match in matches: 
+        pred_index = match[1]
+        gt_index = match[2]
+        # Get actual box values
+        final_pred_boxes.append(prediction_boxes[pred_index])
+        final_gt_boxes.append(gt_boxes[gt_index])
 
-
-
-    return np.array([]), np.array([])
+    return np.asarray(final_pred_boxes), np.asarray(final_gt_boxes)
 
 
 def calculate_individual_image_result(prediction_boxes, gt_boxes, iou_threshold):
