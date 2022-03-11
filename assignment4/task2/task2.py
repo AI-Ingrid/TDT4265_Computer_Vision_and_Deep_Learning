@@ -146,9 +146,16 @@ def calculate_individual_image_result(prediction_boxes, gt_boxes, iou_threshold)
         dict: containing true positives, false positives, true negatives, false negatives
             {"true_pos": int, "false_pos": int, false_neg": int}
     """
+    final_pred_box, final_gt_box = get_all_box_matches(prediction_boxes, gt_boxes, iou_threshold)
 
-    raise NotImplementedError
 
+    results = {}
+
+    results["true_pos"] = len(final_pred_box)
+    results["false_pos"] = len(prediction_boxes) - len(final_pred_box) 
+    results["false_neg"] = len(gt_boxes) - len(final_gt_box) 
+
+    return results
 
 def calculate_precision_recall_all_images(
     all_prediction_boxes, all_gt_boxes, iou_threshold):
@@ -169,8 +176,21 @@ def calculate_precision_recall_all_images(
     Returns:
         tuple: (precision, recall). Both float.
     """
-    raise NotImplementedError
+    # TODO: Do we need loop?
+    results = []
+    for gt_box, pred_box in zip(all_prediction_boxes, all_gt_boxes):
+        results.append(calculate_individual_image_result(pred_box, gt_box, iou_threshold))
+    
+    tp, fp, fn = 0,0,0
+    for result in results:
+        tp += result["true_pos"]  
+        fp += result["false_pos"] 
+        fn += result["false_neg"] 
+    precision = calculate_precision(num_fp=fp, num_tp=tp, num_fn=fn)
+    recall = calculate_recall(num_fp=fp, num_tp=tp, num_fn=fn)
 
+    return (precision, recall)
+    
 
 def get_precision_recall_curve(
     all_prediction_boxes, all_gt_boxes, confidence_scores, iou_threshold
