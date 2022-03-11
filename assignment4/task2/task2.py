@@ -210,7 +210,7 @@ def get_precision_recall_curve(
             is a np.array containing all ground truth bounding boxes for the given image
             objects with shape: [number of ground truth boxes, 4].
             Each row includes [xmin, ymin, xmax, ymax]
-        scores: (list of np.array of floats): each element in the list
+        confidence_scores: (list of np.array of floats): each element in the list
             is a np.array containting the confidence score for each of the
             predicted bounding box. Shape: [number of predicted boxes]
 
@@ -222,9 +222,21 @@ def get_precision_recall_curve(
     # curve, we will use an approximation
     confidence_thresholds = np.linspace(0, 1, 500)
     # YOUR CODE HERE
-
+    
     precisions = [] 
     recalls = []
+
+    for confidence_threshold in confidence_thresholds:
+        final_pred_boxes = []
+        for pred_box, confidence_score in zip(all_prediction_boxes, confidence_scores):
+            for score in confidence_score:
+                if (score >= confidence_threshold):
+                    final_pred_boxes.append(pred_box)
+            
+        precision, recall = calculate_precision_recall_all_images(all_gt_boxes=all_gt_boxes, all_prediction_boxes=final_pred_boxes, iou_threshold=iou_threshold)
+        precisions.append(precision)
+        recalls.append(recall)
+    
     return np.array(precisions), np.array(recalls)
 
 
