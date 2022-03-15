@@ -1,4 +1,4 @@
-from task2 import calculate_iou, calculate_precision, calculate_recall,  get_all_box_matches, calculate_individual_image_result, calculate_precision_recall_all_images, get_precision_recall_curve2 as get_precision_recall_curve, calculate_mean_average_precision
+from task2 import *
 import numpy as np
 
 
