@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tools import read_predicted_boxes, read_ground_truth_boxes
 
-
 def calculate_iou(prediction_box, gt_box):
     """Calculate intersection over union of single predicted and ground truth box.
 
@@ -276,8 +275,23 @@ def calculate_mean_average_precision(precisions, recalls):
     """
     # Calculate the mean average precision given these recall levels.
     recall_levels = np.linspace(0, 1.0, 11)
-    # YOUR CODE HERE
-    average_precision = 0
+    precision_interp = []
+    
+    # Replace precision value with the max precision value to the right
+    # for each recall level
+    for level in recall_levels: 
+        max_precision = 0
+        # Go through each recall values
+        for recall_index, recall_value in enumerate(recalls):
+            # Check for higher precision on the right and handle not looking 
+            # at the left
+            if precisions[recall_index] >= max_precision and recalls[recall_index] >= level:
+                max_precision = precisions[recall_index] 
+        # Replace the precision values 
+        precision_interp.append(max_precision)
+    
+    # Calculate average precision
+    average_precision = np.mean(precision_interp)
     return average_precision
 
 
