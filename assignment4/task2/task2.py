@@ -178,7 +178,7 @@ def calculate_precision_recall_all_images(
     """
     # TODO: Do we need loop?
     results = []
-    for gt_box, pred_box in zip(all_prediction_boxes, all_gt_boxes):
+    for pred_box, gt_box in zip(all_prediction_boxes, all_gt_boxes):
         results.append(calculate_individual_image_result(pred_box, gt_box, iou_threshold))
     
     tp, fp, fn = 0,0,0
@@ -190,6 +190,8 @@ def calculate_precision_recall_all_images(
     recall = calculate_recall(num_fp=fp, num_tp=tp, num_fn=fn)
 
     return (precision, recall)
+
+    
     
 
 def get_precision_recall_curve(
@@ -229,14 +231,69 @@ def get_precision_recall_curve(
     for confidence_threshold in confidence_thresholds:
         final_pred_boxes = []
         for pred_box, confidence_score in zip(all_prediction_boxes, confidence_scores):
+            print('---------')
             for score in confidence_score:
                 if (score >= confidence_threshold):
                     final_pred_boxes.append(pred_box)
-            
+                    
+        print(final_pred_boxes)
         precision, recall = calculate_precision_recall_all_images(all_gt_boxes=all_gt_boxes, all_prediction_boxes=final_pred_boxes, iou_threshold=iou_threshold)
         precisions.append(precision)
         recalls.append(recall)
-    
+
+    return np.array(precisions), np.array(recalls)
+
+def get_precision_recall_curve2(all_prediction_boxes, all_gt_boxes, confidence_scores, iou_threshold):
+    """Given a set of prediction boxes and ground truth boxes for all images,
+       calculates the recall-precision curve over all images.
+       for a single image.
+
+       NB: all_prediction_boxes and all_gt_boxes are not matched!
+
+    Args:
+        all_prediction_boxes: (list of np.array of floats): each element in the list
+            is a np.array containing all predicted bounding boxes for the given image
+            with shape: [number of predicted boxes, 4].
+            Each row includes [xmin, ymin, xmax, ymax]
+        all_gt_boxes: (list of np.array of floats): each element in the list
+            is a np.array containing all ground truth bounding boxes for the given image
+            objects with shape: [number of ground truth boxes, 4].
+            Each row includes [xmin, ymin, xmax, ymax]
+        scores: (list of np.array of floats): each element in the list
+            is a np.array containting the confidence score for each of the
+            predicted bounding box. Shape: [number of predicted boxes]
+
+            E.g: score[0][1] is the confidence score for a predicted bounding box 1 in image 0.
+    Returns:
+        precisions, recalls: two np.ndarray with same shape.
+    """
+    # Instead of going over every possible confidence score threshold to compute the PR
+    # curve, we will use an approximation
+    confidence_thresholds = np.linspace(0, 1, 500)
+    precisions = []
+    recalls = []
+    for ct in confidence_thresholds:
+        all_approved_boxes = []
+        all_approved_scores = []
+        for picture, score in zip(all_prediction_boxes, confidence_scores):
+            approved_boxes = []
+            approved_scores = []
+            for i in range(picture.shape[0]):
+                if(score[i] >= ct):
+                    approved_boxes.append(picture[i])
+                    approved_scores.append(score[i])
+            all_approved_boxes.append(np.array(approved_boxes))
+            all_approved_scores.append(np.array(approved_scores))
+
+        # setting the approved boxes as all boxes with matching scores, to redue the numbers of iterations needed
+        
+        all_prediction_boxes = all_approved_boxes
+        confidence_scores = all_approved_scores
+
+        all_precicions, all_recalls = calculate_precision_recall_all_images(all_approved_boxes, all_gt_boxes, iou_threshold)
+        precisions.append(all_precicions)
+        recalls.append(all_recalls)
+
     return np.array(precisions), np.array(recalls)
 
 

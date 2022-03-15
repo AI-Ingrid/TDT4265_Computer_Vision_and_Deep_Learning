@@ -1,4 +1,4 @@
-from task2 import *
+from task2 import calculate_iou, calculate_precision, calculate_recall,  get_all_box_matches, calculate_individual_image_result, calculate_precision_recall_all_images, get_precision_recall_curve2 as get_precision_recall_curve, calculate_mean_average_precision
 import numpy as np
 
 
@@ -32,12 +32,6 @@ def test_iou():
 
     b1 = np.array([5.5, 5.5, 8, 8])
     b2 = np.array([5.5, 3, 8, 4])
-    res = calculate_iou(b1, b2)
-    ans = 0.0
-    assert res == ans, "Expected {}, got: {}".format(ans, res)
-
-    b1 = np.array([5.5, 5.5, 8, 8])
-    b2 = np.array([3, 5.5, 4, 9])
     res = calculate_iou(b1, b2)
     ans = 0.0
     assert res == ans, "Expected {}, got: {}".format(ans, res)
