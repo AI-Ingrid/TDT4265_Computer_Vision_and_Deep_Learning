@@ -178,7 +178,7 @@ def calculate_precision_recall_all_images(
     """
     # TODO: Do we need loop?
     results = []
-    for gt_box, pred_box in zip(all_prediction_boxes, all_gt_boxes):
+    for pred_box, gt_box in zip(all_prediction_boxes, all_gt_boxes):
         results.append(calculate_individual_image_result(pred_box, gt_box, iou_threshold))
     
     tp, fp, fn = 0,0,0
@@ -190,6 +190,8 @@ def calculate_precision_recall_all_images(
     recall = calculate_recall(num_fp=fp, num_tp=tp, num_fn=fn)
 
     return (precision, recall)
+
+    
     
 
 def get_precision_recall_curve(
@@ -221,22 +223,24 @@ def get_precision_recall_curve(
     # Instead of going over every possible confidence score threshold to compute the PR
     # curve, we will use an approximation
     confidence_thresholds = np.linspace(0, 1, 500)
-    # TODO: Debug the code :)) Copy code from repos and check each function for mistakes
+    # TODO: not coke so hard
     
     precisions = [] 
     recalls = []
 
     for confidence_threshold in confidence_thresholds:
         final_pred_boxes = []
-        for pred_box, confidence_score in zip(all_prediction_boxes, confidence_scores):
-            for score in confidence_score:
-                if (score >= confidence_threshold):
-                    final_pred_boxes.append(pred_box)
+        for picture, confidence_score in zip(all_prediction_boxes, confidence_scores):
+            picture_pred_boxes = []
+            for pred_box_index, pred_box_value in enumerate(picture):
+                if (confidence_score[pred_box_index] >= confidence_threshold):
+                    picture_pred_boxes.append(pred_box_value)
+            final_pred_boxes.append(np.array(picture_pred_boxes))
             
         precision, recall = calculate_precision_recall_all_images(all_gt_boxes=all_gt_boxes, all_prediction_boxes=final_pred_boxes, iou_threshold=iou_threshold)
         precisions.append(precision)
         recalls.append(recall)
-    
+
     return np.array(precisions), np.array(recalls)
 
 

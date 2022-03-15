@@ -36,12 +36,6 @@ def test_iou():
     ans = 0.0
     assert res == ans, "Expected {}, got: {}".format(ans, res)
 
-    b1 = np.array([5.5, 5.5, 8, 8])
-    b2 = np.array([3, 5.5, 4, 9])
-    res = calculate_iou(b1, b2)
-    ans = 0.0
-    assert res == ans, "Expected {}, got: {}".format(ans, res)
-
     b1 = np.array([522, 540, 576, 660])
     b2 = np.array([520, 540, 570, 655])
     res = round(calculate_iou(b1, b2), 5)
