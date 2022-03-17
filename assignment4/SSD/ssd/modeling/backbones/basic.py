@@ -81,6 +81,11 @@ class BasicModel(torch.nn.Module):
             shape(-1, output_channels[0], 38, 38),
         """
         out_features = []
+        # Peform forward on each layer in the network
+        for layer in self.features:
+            x = layer(x)
+            out_features.append(x)
+
         for idx, feature in enumerate(out_features):
             out_channel = self.out_channels[idx]
             h, w = self.output_feature_shape[idx]
