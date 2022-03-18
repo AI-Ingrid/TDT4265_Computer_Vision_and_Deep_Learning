@@ -8,22 +8,22 @@ class FirstLayer(nn.Sequential):
         super().__init__(
         nn.Conv2d(in_channels=in_channels, out_channels=32, kernel_size=kernel_size, stride=stride, padding=padding),
         nn.BatchNorm2d(num_features=32),
-        nn.ReLU(),
+        nn.Hardswish(inplace=True),
         nn.MaxPool2d(kernel_size=2, stride=2),
         
         nn.Conv2d(in_channels=32, out_channels=64, kernel_size=kernel_size, stride=stride, padding=padding),
         nn.BatchNorm2d(num_features=64),
         nn.MaxPool2d(kernel_size=2, stride=2),
-        nn.ReLU(),
+        nn.Hardswish(inplace=True),
         
         
         nn.Conv2d(in_channels=64, out_channels=64, kernel_size=kernel_size, stride=stride, padding=padding),
         nn.BatchNorm2d(num_features=64),
-        nn.ReLU(),
+        nn.Hardswish(inplace=True),
         
         nn.Conv2d(in_channels=64, out_channels= 128, kernel_size=kernel_size, stride=2, padding=padding),
         nn.BatchNorm2d(num_features=128),
-        nn.ReLU(),
+        nn.Hardswish(inplace=True),
         )
 
 class Layer(nn.Sequential):
@@ -31,7 +31,7 @@ class Layer(nn.Sequential):
         super().__init__(
             nn.ReLU(),
             nn.Conv2d(in_channels=in_channels, out_channels= in_channels, kernel_size=kernel_size, stride=stride_one, padding=padding_one),
-            nn.BatchNorm2d(num_features = in_channels),
+            #nn.BatchNorm2d(num_features = in_channels),
             nn.Hardswish(inplace=True),
             nn.Conv2d(in_channels=in_channels, out_channels= out_channels, kernel_size=kernel_size, stride=stride_two, padding=padding_two),
             nn.SiLU(),
