@@ -1,3 +1,4 @@
+from tokenize import String
 import torchvision
 import torch
 import tqdm
@@ -13,9 +14,9 @@ from pathlib import Path
 
 @torch.no_grad()
 @click.command()
-@click.argument("config_path", type=click.Path(exists=True, dir_okay=False, path_type=Path))
-@click.argument("image_dir", type=click.Path(exists=True, dir_okay=True, path_type=Path))
-@click.argument("output_dir", type=click.Path(dir_okay=True, path_type=Path))
+@click.argument("config_path", type=click.Path(exists=True, dir_okay=False, path_type=str))
+@click.argument("image_dir", type=click.Path(exists=True, dir_okay=True, path_type=str))
+@click.argument("output_dir", type=click.Path(dir_okay=True, path_type=str))
 @click.option("-s", "--score_threshold", type=click.FloatRange(min=0, max=1), default=.3)
 def run_demo(config_path: Path, score_threshold: float, image_dir: Path, output_dir: Path):
     cfg = utils.load_config(config_path)
