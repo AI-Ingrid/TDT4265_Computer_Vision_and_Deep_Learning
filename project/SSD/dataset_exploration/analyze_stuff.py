@@ -23,8 +23,40 @@ def get_dataloader(cfg, dataset_to_visualize):
 
     return data_loader
 
-def analyze_something(dataloader, cfg):
+def create_box_plot(data_frame):
+    plt = matplotlib.pyplot
+    data_frame = data_frame[['size', 'Label']]
 
+    # plot bg
+    sns.set_style("whitegrid")
+
+    #Size of the plot
+    plt.subplots(figsize=(21, 14))
+
+    # setting color of the plot
+    color = sns.color_palette('pastel')
+
+    # Using seaborn to plot it horizontally with 'color'
+    sns.catplot(data=data_frame, x="size", y="Label", kind="box", palette=color)
+
+    # Title of the graph
+    plt.title('Spread of boxsizes given a label', size = 20)
+
+    # Horizontal axis Label
+    plt.xlabel('Size of boxes', size = 17)
+    # Vertical axis Label
+    plt.ylabel('Labels', size = 17)
+
+    # x-axis label size
+    plt.xticks(size = 17)
+    #y-axis label size
+    plt.yticks(size = 15)
+
+    # display plot
+    plt.save('plot/box_plot.png')
+
+
+def analyze_something(dataloader, cfg):
     """
     TODO: 
     [X] Lage en dataframe som ser sånn her ut
@@ -32,10 +64,10 @@ def analyze_something(dataloader, cfg):
     | Label | Boxes |
     +-------+-------+
     
-    [] Lage en kolonne til som heter size
+    [X] Lage en kolonne til som heter size
 
     Begynne å analysere dataframe-en
-    [] Type of task -> Type of diagram (x,y) 
+    [] Type of task -> Type of diagram (x-akse,y-akse) 
     [] Size of boxes of given the same label -> Box plot (size, labels)
     [] No. of observations given a label in general -> Bar diagram (labels, amount)
     """
@@ -51,9 +83,13 @@ def analyze_something(dataloader, cfg):
                                                 "x2": box[2].numpy(), 
                                                 "y2": box[3].numpy(),
                                                 }, ignore_index=True)
+    
+    #data_frame = data_frame["Label"].astype("category")
     # Create a new column with the size of each boxes   
     data_frame["size"] = data_frame.apply(lambda row: (row["x2"] - row["x1"]) * (row["y2"] - row["y1"]), axis=1)
     print(data_frame.head())
+    print(data_frame.info())
+    return data_frame
 
 
 
@@ -66,7 +102,8 @@ def main():
     print("Label map is:", cfg.label_map)
 
     dataloader = get_dataloader(cfg, dataset_to_analyze)
-    analyze_something(dataloader, cfg)
+    data_frame = analyze_something(dataloader, cfg)
+    create_box_plot(data_frame)
 
 
 if __name__ == '__main__':
