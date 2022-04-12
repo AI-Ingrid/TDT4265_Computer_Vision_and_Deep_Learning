@@ -71,7 +71,6 @@ def analyze_something(dataloader, cfg):
     [] Size of boxes of given the same label -> Box plot (size, labels)
     [] No. of observations given a label in general -> Bar diagram (labels, amount)
     """
-
     # Creating a dataframe to store the data
     data_frame = pd.DataFrame()
     for batch in tqdm(dataloader):
@@ -88,6 +87,9 @@ def analyze_something(dataloader, cfg):
     data_frame = data_frame.astype({"Label":'category', "x1":'float64', "y1":'float64', "x2":'float64', "y2":'float64'})
     # Create a new column with the size of each boxes   
     data_frame["size"] = data_frame.apply(lambda row: (row["x2"] - row["x1"]) * (row["y2"] - row["y1"]), axis=1)
+    #Label map is: {0: 'background', 1: 'car', 2: 'truck', 3: 'bus', 4: 'motorcycle', 5: 'bicycle', 6: 'scooter', 7: 'person', 8: 'rider'}
+    for x in range (0,9):
+        data_frame[x] = data_frame[x].astype('category')
     print(data_frame.head())
     print(data_frame.info())
     return data_frame
