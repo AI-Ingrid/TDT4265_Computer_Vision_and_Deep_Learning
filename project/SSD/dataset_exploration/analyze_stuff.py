@@ -103,7 +103,7 @@ def main():
 
     dataloader = get_dataloader(cfg, dataset_to_analyze)
     data_frame = analyze_something(dataloader, cfg)
-    create_box_plot(data_frame)
+    #create_box_plot(data_frame)
 
 
 if __name__ == '__main__':
