@@ -27,50 +27,34 @@ def analyze_something(dataloader, cfg):
 
     """
     TODO: 
-    [] Lage en dataframe som ser sånn her ut
-    +-------+--------+-------+-------+
-    | Label | Height | Width | Boxes |
-    +-------+--------+-------+-------+
+    [X] Lage en dataframe som ser sånn her ut
+    +-------+-------+
+    | Label | Boxes |
+    +-------+-------+
     
+    [] Lage en kolonne til som heter size
+
     Begynne å analysere dataframe-en
     [] Type of task -> Type of diagram (x,y) 
     [] Size of boxes of given the same label -> Box plot (size, labels)
     [] No. of observations given a label in general -> Bar diagram (labels, amount)
     """
+
+    # Creating a dataframe to store the data
     data_frame = pd.DataFrame()
     for batch in tqdm(dataloader):
-        data_frame = data_frame.append(batch, ignore_index=True)
-        print("The keys in the batch are:", batch.keys())
-        print('Labels: ',batch["labels"])
-        
-        # Size of the frame
-        print('Height: ',batch["height"])
-        print("Width: ",batch["width"])
-        
-        # Boxes in frame
-        print("Boxes: ", batch["boxes"])
-        print(type(batch))
-        
-        # Calculate size of a an object
-        # box = [x1 y1 x2 y2]
-        for box, label in zip(batch["boxes"], batch["labels"]):
-            print(box)
-            
-            # First corner
-            x1 = box[0]
-            y1 = box[1]
-            
-            # Second corner
-            x2 = box[2]
-            y2 = box[3]
-            
-            box_width = x2 - x1
-            box_height = y2 - y1
-            
-            box_size = box_width * box_height
-  
-        #exit()
-    data_frame.show()
+        for labels, boxes in zip(batch["labels"], batch["boxes"]):
+            for label, box in zip(labels, boxes):
+                data_frame = data_frame.append({"Label": label.numpy(), 
+                                                "x1": box[0].numpy(), 
+                                                "y1": box[1].numpy(), 
+                                                "x2": box[2].numpy(), 
+                                                "y2": box[3].numpy(),
+                                                }, ignore_index=True)
+    # Create a new column with the size of each boxes   
+    data_frame["size"] = data_frame.apply(lambda row: (row["x2"] - row["x1"]) * (row["y2"] - row["y1"]), axis=1)
+    print(data_frame.head())
+
 
 
 def main():
