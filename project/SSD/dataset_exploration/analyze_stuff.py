@@ -85,6 +85,7 @@ def analyze_something(dataloader, cfg):
                                                 }, ignore_index=True)
     
     #data_frame = data_frame["Label"].astype("category")
+    data_frame = data_frame.astype({"Label":'category', "x1":'float64', "y1":'float64', "x2":'float64', "y2":'float64'})
     # Create a new column with the size of each boxes   
     data_frame["size"] = data_frame.apply(lambda row: (row["x2"] - row["x1"]) * (row["y2"] - row["y1"]), axis=1)
     print(data_frame.head())
