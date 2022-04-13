@@ -25,7 +25,6 @@ def get_dataloader(cfg, dataset_to_visualize):
 
 def create_box_plot(data_frame):
     plt = matplotlib.pyplot
-    data_frame = data_frame[['size', 'Label']]
 
     # plot bg
     sns.set_style("whitegrid")
@@ -76,8 +75,8 @@ def analyze_something(dataloader, cfg):
     for batch in tqdm(dataloader):
         for labels, boxes in zip(batch["labels"], batch["boxes"]):
             for label, box in zip(labels, boxes):
-                data_frame = data_frame.append({"label": label.numpy, 
-                                                "x1": box[0].numpy(), 
+                data_frame = data_frame.append({"label": int(label.detach().numpy()), 
+                                                "x1": box[0].detach().numpy(), 
                                                 "y1": box[1].numpy(), 
                                                 "x2": box[2].numpy(), 
                                                 "y2": box[3].numpy(),
@@ -89,6 +88,7 @@ def analyze_something(dataloader, cfg):
     data_frame["size"] = data_frame.apply(lambda row: (row["x2"] - row["x1"]) * (row["y2"] - row["y1"]), axis=1)    
     print(data_frame.head())
     print(data_frame.info())
+    data_frame.to_csv('data_frame.csv')
     return data_frame
 
 
@@ -101,8 +101,12 @@ def main():
     # Printing out possible labels
     print("Label map is:", cfg.label_map)
 
+    ## OBS: Hvis du ikke har kjørt koden må du lage df-en
     dataloader = get_dataloader(cfg, dataset_to_analyze)
     data_frame = analyze_something(dataloader, cfg)
+    ## Hvis du har kjørt koden og har csv-en kan du kjøre koden under
+
+    #data_frame = pd.read_csv('data_frame.csv')
     #create_box_plot(data_frame)
 
 
