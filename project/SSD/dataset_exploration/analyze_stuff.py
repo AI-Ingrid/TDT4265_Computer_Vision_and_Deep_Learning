@@ -76,19 +76,17 @@ def analyze_something(dataloader, cfg):
     for batch in tqdm(dataloader):
         for labels, boxes in zip(batch["labels"], batch["boxes"]):
             for label, box in zip(labels, boxes):
-                data_frame = data_frame.append({"Label": label.numpy(), 
+                data_frame = data_frame.append({"label": label.numpy, 
                                                 "x1": box[0].numpy(), 
                                                 "y1": box[1].numpy(), 
                                                 "x2": box[2].numpy(), 
                                                 "y2": box[3].numpy(),
                                                 }, ignore_index=True)
 
-    #data_frame = data_frame["Label"].astype("category")
-    #data_frame = data_frame.astype({"Label":'category', "x1":'float64', "y1":'float64', "x2":'float64', "y2":'float64'})
+    # Changing the dtype for label to 'category'
+    data_frame["label"] = data_frame["label"].astype("category")
     # Create a new column with the size of each boxes   
-    data_frame["size"] = data_frame.apply(lambda row: (row["x2"] - row["x1"]) * (row["y2"] - row["y1"]), axis=1)
-    #Label map is: {0: 'background', 1: 'car', 2: 'truck', 3: 'bus', 4: 'motorcycle', 5: 'bicycle', 6: 'scooter', 7: 'person', 8: 'rider'}
-    
+    data_frame["size"] = data_frame.apply(lambda row: (row["x2"] - row["x1"]) * (row["y2"] - row["y1"]), axis=1)    
     print(data_frame.head())
     print(data_frame.info())
     return data_frame
