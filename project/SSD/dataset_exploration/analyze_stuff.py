@@ -36,7 +36,7 @@ def create_box_plot(data_frame):
     color = sns.color_palette('pastel')
 
     # Using seaborn to plot it horizontally with 'color'
-    sns.catplot(data=data_frame, x="size", y="Label", kind="box", palette=color)
+    sns.catplot(data=data_frame, x="size", y="label", kind="box", palette=color, showfliers=False)
 
     # Title of the graph
     plt.title('Spread of boxsizes given a label', size = 20)
@@ -52,7 +52,7 @@ def create_box_plot(data_frame):
     plt.yticks(size = 15)
 
     # display plot
-    plt.save('plot/box_plot.png')
+    plt.show()
 
 
 def analyze_something(dataloader, cfg):
@@ -86,8 +86,7 @@ def analyze_something(dataloader, cfg):
     data_frame["label"] = data_frame["label"].astype("category")
     # Create a new column with the size of each boxes   
     data_frame["size"] = data_frame.apply(lambda row: (row["x2"] - row["x1"]) * (row["y2"] - row["y1"]), axis=1)    
-    print(data_frame.head())
-    print(data_frame.info())
+
     data_frame.to_csv('data_frame.csv')
     return data_frame
 
@@ -102,12 +101,14 @@ def main():
     print("Label map is:", cfg.label_map)
 
     ## OBS: Hvis du ikke har kjørt koden må du lage df-en
-    dataloader = get_dataloader(cfg, dataset_to_analyze)
-    data_frame = analyze_something(dataloader, cfg)
+    #dataloader = get_dataloader(cfg, dataset_to_analyze)
+    #data_frame = analyze_something(dataloader, cfg)
     ## Hvis du har kjørt koden og har csv-en kan du kjøre koden under
-
-    #data_frame = pd.read_csv('data_frame.csv')
-    #create_box_plot(data_frame)
+    data_frame = pd.read_csv('dataset_exploration/dataset/data_frame.csv')
+    data_frame["label"] = data_frame["label"].astype("category")
+    print(data_frame.head())
+    print(data_frame.info())
+    create_box_plot(data_frame)
 
 
 if __name__ == '__main__':
