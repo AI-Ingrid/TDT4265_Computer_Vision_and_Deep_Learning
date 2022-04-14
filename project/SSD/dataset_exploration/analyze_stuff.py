@@ -54,6 +54,33 @@ def create_box_plot(data_frame):
     # display plot
     plt.show()
 
+def create_sum_plot(data_frame): 
+    sns.set_style({'grid.color': 'white'})
+
+    data_frame = data_frame['label'].value_counts()
+
+    # Sum the data, plot bar with given size using color defined
+    data_frame.plot(kind='bar', figsize=(10, 8), color='#A40E4C')
+
+    # Title of the graph
+    plt.title('No. of observations of labels', size = 20)
+
+    # Horizontal axis Label
+    plt.xlabel('Labels', size = 17)
+    # Vertical axis Label
+    plt.ylabel('No.of Observation', size = 17)
+
+    # x-axis label size, setting label rotations
+    plt.xticks(rotation = 'horizontal', size = 14)
+    # y-axis label size
+    plt.yticks(size = 14)
+
+    # removing the top and right axes spines, which are not needed
+    sns.despine()
+
+    # display plot
+    plt.show()
+
 
 def analyze_something(dataloader, cfg):
     """
@@ -99,7 +126,6 @@ def main():
     
     # Printing out possible labels
     print("Label map is:", cfg.label_map)
-
     ## OBS: Hvis du ikke har kjørt koden må du lage df-en
     try:
         data_frame = pd.read_csv('dataset_exploration/dataset/data_frame.csv')
@@ -108,9 +134,11 @@ def main():
         data_frame = analyze_something(dataloader, cfg)
 
     data_frame["label"] = data_frame["label"].astype("category")
+
     print(data_frame.head())
     print(data_frame.info())
     create_box_plot(data_frame)
+    create_sum_plot(data_frame)
 
 
 if __name__ == '__main__':
