@@ -101,10 +101,12 @@ def main():
     print("Label map is:", cfg.label_map)
 
     ## OBS: Hvis du ikke har kjørt koden må du lage df-en
-    #dataloader = get_dataloader(cfg, dataset_to_analyze)
-    #data_frame = analyze_something(dataloader, cfg)
-    ## Hvis du har kjørt koden og har csv-en kan du kjøre koden under
-    data_frame = pd.read_csv('dataset_exploration/dataset/data_frame.csv')
+    try:
+        data_frame = pd.read_csv('dataset_exploration/dataset/data_frame.csv')
+    except:
+        dataloader = get_dataloader(cfg, dataset_to_analyze)
+        data_frame = analyze_something(dataloader, cfg)
+
     data_frame["label"] = data_frame["label"].astype("category")
     print(data_frame.head())
     print(data_frame.info())
