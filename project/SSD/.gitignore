@@ -19,7 +19,6 @@ data/coco/
 data/mnist_object_detection
 data/original_mnist
 datasets/
-dataset/
 outputs/
 data/VOCdevkit
 notebooks/data
