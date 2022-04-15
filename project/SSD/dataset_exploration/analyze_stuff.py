@@ -46,7 +46,7 @@ def create_box_plot(data_frame, label_text):
     plt.xlabel('Size of boxes', size = 17)
     # Vertical axis Label
     plt.ylabel('Labels', size = 17)
-    ax.set_yticklabels(label_text['text_labels'], rotation='horizontal', fontsize=10)
+    ax.set_yticklabels(label_text['text_labels'], rotation='horizontal', fontsize=5)
 
     # x-axis label size
     plt.xticks(size = 17)
@@ -96,9 +96,9 @@ def create_correlation_plot(data_frame):
     sns.heatmap(data_frame_corr, mask=mask, center=0, square=True, annot=True, annot_kws={"size": 15}, cbar_kws={"shrink": .8})
 
     # x-axis label size
-    plt.xticks(size = 13)
+    plt.xticks(size = 13, rotation = 0)
     # y-axis label size
-    plt.yticks(size = 13)
+    plt.yticks(size = 13, rotation = 0)
 
     # display plot
     plt.show()
@@ -114,9 +114,9 @@ def analyze_something(dataloader, cfg):
     [X] Lage en kolonne til som heter size
 
     Begynne å analysere dataframe-en
-    [] Type of task -> Type of diagram (x-akse,y-akse) 
-    [] Size of boxes of given the same label -> Box plot (size, labels)
-    [] No. of observations given a label in general -> Bar diagram (labels, amount)
+    [X] Type of task -> Type of diagram (x-akse,y-akse) 
+    [X] Size of boxes of given the same label -> Box plot (size, labels)
+    [X] No. of observations given a label in general -> Bar diagram (labels, amount)
     """
     # Creating a dataframe to store the data
     data_frame = pd.DataFrame()
@@ -148,7 +148,7 @@ def main():
     # Printing out possible labels
     print("Label map is:", cfg.label_map)
     
-    ## OBS: Hvis du ikke har kjørt koden må du lage df-en
+    # Reading or creating data_frame
     try:
         print("Loading dataframe from file...")
         data_frame = pd.read_csv('dataset_exploration/dataset/data_frame.csv')
@@ -165,10 +165,12 @@ def main():
     data_frame["x_max"] = data_frame["x_max"].astype("float64")
     data_frame["y_min"] = data_frame["y_min"].astype("float64")
 
+    # Printing stuff
     print(data_frame.head())
     print(data_frame.info())
     print(data_frame.describe())
 
+    # Creating the plots
     label_text = pd.read_csv("dataset_exploration/dataset/labels.csv")
     create_sum_plot(data_frame)
     create_box_plot(data_frame,label_text)
