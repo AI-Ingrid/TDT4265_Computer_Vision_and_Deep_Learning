@@ -10,7 +10,6 @@ class FirstLayer(nn.Sequential):
         nn.ReLU(),
         nn.MaxPool2d(kernel_size=2, stride=2),
         nn.Conv2d(in_channels=32, out_channels=64, kernel_size=kernel_size, stride=stride, padding=padding),
-        nn.MaxPool2d(kernel_size=2, stride=2),
         nn.ReLU(),
         nn.Conv2d(in_channels=64, out_channels=64, kernel_size=kernel_size, stride=stride, padding=padding),
         nn.ReLU(),
@@ -20,6 +19,16 @@ class FirstLayer(nn.Sequential):
 
 class Layer(nn.Sequential):
     def __init__(self, in_channels, mid_channels, out_channels, kernel_size=3, stride_one=1, stride_two=2, padding_one=1, padding_two=1):
+        super().__init__(
+            nn.ReLU(),
+            nn.Conv2d(in_channels=in_channels, out_channels= in_channels, kernel_size=kernel_size, stride=stride_one, padding=padding_one),
+            nn.ReLU(),
+            nn.Conv2d(in_channels=in_channels, out_channels= out_channels, kernel_size=kernel_size, stride=stride_two, padding=padding_two),
+            nn.ReLU(),
+        )
+
+class LastLayer(nn.Sequential):
+    def __init__(self, in_channels, mid_channels, out_channels, kernel_size=2, stride_one=1, stride_two=2, padding_one=1, padding_two=1):
         super().__init__(
             nn.ReLU(),
             nn.Conv2d(in_channels=in_channels, out_channels= in_channels, kernel_size=kernel_size, stride=stride_one, padding=padding_one),
@@ -64,7 +73,7 @@ class BasicModel(torch.nn.Module):
         self.fifth_layer = Layer(output_channels[3], 128, output_channels[4])
         self.features.append(self.fifth_layer)
         # 6
-        self.last_layer = Layer(output_channels[4], 128, output_channels[5], stride_two=1, padding_two=0)
+        self.last_layer = LastLayer(output_channels[4], 128, output_channels[5], stride_two=1, padding_two=0)
         self.features.append(self.last_layer)
 
     def forward(self, x):
