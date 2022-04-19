@@ -27,15 +27,6 @@ class Layer(nn.Sequential):
             nn.ReLU(),
         )
 
-class LastLayer(nn.Sequential):
-    def __init__(self, in_channels, out_channels):
-        super().__init__(
-            nn.ReLU(),
-            nn.Conv2d(in_channels=in_channels, out_channels= in_channels, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(in_channels=in_channels, out_channels= out_channels, kernel_size=4, stride=2, padding=1),
-            nn.ReLU(),
-        )
 class BasicModel(torch.nn.Module):
     """
     This is a basic backbone for SSD.
@@ -75,7 +66,7 @@ class BasicModel(torch.nn.Module):
         self.fifth_layer = Layer(output_channels[3], output_channels[4]) # in 128 ut 64
         self.features.append(self.fifth_layer)
         # 6
-        self.last_layer = LastLayer(output_channels[4], output_channels[5]) # in 64 ut 64
+        self.last_layer = Layer(output_channels[4], output_channels[5]) # in 64 ut 64
         self.features.append(self.last_layer)
 
     def forward(self, x):
