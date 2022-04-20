@@ -1,0 +1,134 @@
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   configs/ssd300.py
+	modified:   configs/test_anchors/base.py
+	modified:   ssd/modeling/backbones/basic.py
+
+no changes added to commit (use "git add" and/or "git commit -a")
+1ac4b0bbe92db60ec04ce9d27d6f1015118525af
+diff --git a/project/SSD/configs/ssd300.py b/project/SSD/configs/ssd300.py
+index d26b29e..8e17c67 100644
+--- a/project/SSD/configs/ssd300.py
++++ b/project/SSD/configs/ssd300.py
+@@ -21,15 +21,16 @@ train = dict(
+ )
+ 
+ anchors = L(AnchorBoxes)(
+-    feature_sizes=[[38, 38], [19, 19], [10, 10], [5, 5], [3, 3], [1, 1]],
++    feature_sizes=[[32, 256], [16, 128], [8, 64], [4, 32], [2, 16], [1, 8]],
++    # Strides is the number of pixels (in image space) between each spatial position in the feature map
++    strides=[[4, 4], [8, 8], [16, 16], [32, 32], [64, 64], [128, 128]],
++    min_sizes=[[16, 16], [32, 32], [48, 48], [64, 64], [86, 86], [128, 128], [128, 400]],
+     # Strides is the number of pixels (in image space) between each spatial position in the feature map
+-    strides=[[8, 8], [16, 16], [32, 32], [64, 64], [100, 100], [300, 300]],
+-    min_sizes=[[30, 30], [60, 60], [111, 111], [162, 162], [213, 213], [264, 264], [315, 315]],
+     # aspect ratio is defined per feature map (first index is largest feature map (38x38))
+     # aspect ratio is used to define two boxes per element in the list.
+     # if ratio=[2], boxes will be created with ratio 1:2 and 2:1
+     # Number of boxes per location is in total 2 + 2 per aspect ratio
+-    aspect_ratios=[[2], [2, 3], [2, 3], [2, 3], [2], [2]],
++    aspect_ratios=[[2, 3], [2, 3], [2, 3], [2, 3], [2], [2]],
+     image_shape="${train.imshape}",
+     scale_center_variance=0.1,
+     scale_size_variance=0.2
+diff --git a/project/SSD/configs/test_anchors/base.py b/project/SSD/configs/test_anchors/base.py
+index df44a29..a0c333c 100644
+--- a/project/SSD/configs/test_anchors/base.py
++++ b/project/SSD/configs/test_anchors/base.py
+@@ -19,7 +19,7 @@ from ..tdt4265 import (
+ # The config below is copied from the ssd300.py model trained on images of size 300*300.
+ # The images in the tdt4265 dataset are of size 128 * 1024, so resizing to 300*300 is probably a bad idea
+ # Change the imshape to (128, 1024) and experiment with better prior boxes
+-train.imshape = (300, 300)
++train.imshape = (128,1024)
+ 
+ 
+ anchors = L(AnchorBoxes)(
+@@ -32,7 +32,7 @@ anchors = L(AnchorBoxes)(
+     # aspect ratio is used to define two boxes per element in the list.
+     # if ratio=[2], boxes will be created with ratio 1:2 and 2:1
+     # Number of boxes per location is in total 2 + 2 per aspect ratio
+-    aspect_ratios=[[2], [2, 3], [2, 3], [2, 3], [2], [2]],
++    aspect_ratios=[[2, 3], [2, 3], [2, 3], [2, 3], [2], [2]],
+     image_shape="${train.imshape}",
+     scale_center_variance=0.1,
+     scale_size_variance=0.2
+diff --git a/project/SSD/ssd/modeling/backbones/basic.py b/project/SSD/ssd/modeling/backbones/basic.py
+index 9e1e448..7fbb9a3 100644
+--- a/project/SSD/ssd/modeling/backbones/basic.py
++++ b/project/SSD/ssd/modeling/backbones/basic.py
+@@ -2,23 +2,23 @@ import torch
+ from typing import Tuple, List
+ from torch import nn
+ 
+-# TODO: Mulig vi må ta inn nn.Sequential
+ class FirstLayer(nn.Sequential):
+     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding = 1):
+         super().__init__(
+-        nn.Conv2d(in_channels=in_channels, out_channels=32, kernel_size=kernel_size, stride=stride, padding=padding),
++        nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size, stride=stride, padding=padding),
+         nn.ReLU(),
+         nn.MaxPool2d(kernel_size=2, stride=2),
+         nn.Conv2d(in_channels=32, out_channels=64, kernel_size=kernel_size, stride=stride, padding=padding),
++        # nn.MaxPool2d(kernel_size=2, stride=2),
+         nn.ReLU(),
+         nn.Conv2d(in_channels=64, out_channels=64, kernel_size=kernel_size, stride=stride, padding=padding),
+         nn.ReLU(),
+-        nn.Conv2d(in_channels=64, out_channels= 128, kernel_size=kernel_size, stride=2, padding=padding),
++        nn.Conv2d(in_channels=64, out_channels=128, kernel_size=4, stride=2, padding=padding),
+         nn.ReLU(),
+         )
+ 
+ class Layer(nn.Sequential):
+-    def __init__(self, in_channels, mid_channels, out_channels, kernel_size=3, stride_one=1, stride_two=2, padding_one=1, padding_two=1):
++    def __init__(self, in_channels, out_channels, kernel_size=3, stride_one=1, stride_two=2, padding_one=1, padding_two=1):
+         super().__init__(
+             nn.ReLU(),
+             nn.Conv2d(in_channels=in_channels, out_channels= in_channels, kernel_size=kernel_size, stride=stride_one, padding=padding_one),
+@@ -28,7 +28,7 @@ class Layer(nn.Sequential):
+         )
+ 
+ class LastLayer(nn.Sequential):
+-    def __init__(self, in_channels, mid_channels, out_channels, kernel_size=2, stride_one=1, stride_two=2, padding_one=1, padding_two=1):
++    def __init__(self, in_channels, out_channels, kernel_size=2, stride_one=1, stride_two=2, padding_one=1, padding_two=1):
+         super().__init__(
+             nn.ReLU(),
+             nn.Conv2d(in_channels=in_channels, out_channels= in_channels, kernel_size=kernel_size, stride=stride_one, padding=padding_one),
+@@ -56,24 +56,26 @@ class BasicModel(torch.nn.Module):
+         self.output_feature_shape = output_feature_sizes
+         
+         # Creating CNN
+-        self.features = nn.ModuleList() # TODO: Should we use ModuleList here or Sequential
++        # output_channels=[128, 256, 128, 128, 64, 64]
++        
++        self.features = nn.ModuleList() 
+         # 1
+-        self.first_layer = FirstLayer(image_channels, output_channels[0])
++        self.first_layer = FirstLayer(in_channels = image_channels, out_channels = output_channels[0]) # in image ut 128
+         self.features.append(self.first_layer)
+         # 2
+-        self.second_layer = Layer(output_channels[0], 128, output_channels[1])
++        self.second_layer = Layer(output_channels[0], output_channels[1]) # in 128 ut 256
+         self.features.append(self.second_layer)
+         # 3
+-        self.third_layer = Layer(output_channels[1], 265, output_channels[2])
++        self.third_layer = Layer(output_channels[1], output_channels[2]) # in 256 ut 128
+         self.features.append(self.third_layer)
+         # 4
+-        self.fourth_layer = Layer(output_channels[2], 128, output_channels[3])
++        self.fourth_layer = Layer(output_channels[2], output_channels[3]) # in 128 ut 128
+         self.features.append(self.fourth_layer)
+         # 5
+-        self.fifth_layer = Layer(output_channels[3], 128, output_channels[4])
++        self.fifth_layer = Layer(output_channels[3], output_channels[4]) # in 128 ut 64
+         self.features.append(self.fifth_layer)
+         # 6
+-        self.last_layer = LastLayer(output_channels[4], 128, output_channels[5], stride_two=1, padding_two=0)
++        self.last_layer = LastLayer(output_channels[4], output_channels[5], stride_two=1, padding_two=0) # in 64 ut 64
+         self.features.append(self.last_layer)
+ 
+     def forward(self, x):

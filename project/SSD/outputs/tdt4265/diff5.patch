@@ -1,0 +1,34 @@
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   configs/test_anchors/base.py
+
+no changes added to commit (use "git add" and/or "git commit -a")
+1ac4b0bbe92db60ec04ce9d27d6f1015118525af
+diff --git a/project/SSD/configs/test_anchors/base.py b/project/SSD/configs/test_anchors/base.py
+index df44a29..0eec63c 100644
+--- a/project/SSD/configs/test_anchors/base.py
++++ b/project/SSD/configs/test_anchors/base.py
+@@ -19,7 +19,9 @@ from ..tdt4265 import (
+ # The config below is copied from the ssd300.py model trained on images of size 300*300.
+ # The images in the tdt4265 dataset are of size 128 * 1024, so resizing to 300*300 is probably a bad idea
+ # Change the imshape to (128, 1024) and experiment with better prior boxes
+-train.imshape = (300, 300)
++train.imshape = (128, 1024)
++
++#Expected shape: (128, 38, 38), got: torch.Size([128, 32, 256]) 
+ 
+ 
+ anchors = L(AnchorBoxes)(
+@@ -32,7 +34,7 @@ anchors = L(AnchorBoxes)(
+     # aspect ratio is used to define two boxes per element in the list.
+     # if ratio=[2], boxes will be created with ratio 1:2 and 2:1
+     # Number of boxes per location is in total 2 + 2 per aspect ratio
+-    aspect_ratios=[[2], [2, 3], [2, 3], [2, 3], [2], [2]],
++    aspect_ratios=[[2, 3], [2, 3], [2, 3], [2, 3], [2], [2]],
+     image_shape="${train.imshape}",
+     scale_center_variance=0.1,
+     scale_size_variance=0.2

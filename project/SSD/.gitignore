@@ -19,7 +19,6 @@ data/coco/
 data/mnist_object_detection
 data/original_mnist
 datasets/
-outputs/
 data/VOCdevkit
 notebooks/data
 data/tdt4265_2022
