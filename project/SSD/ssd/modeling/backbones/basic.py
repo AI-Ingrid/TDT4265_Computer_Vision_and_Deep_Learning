@@ -69,6 +69,8 @@ class BasicModel(torch.nn.Module):
         self.last_layer = Layer(output_channels[4], output_channels[5]) # in 64 ut 64
         self.features.append(self.last_layer)
 
+
+
     def forward(self, x):
         """
         The forward functiom should output features with shape:

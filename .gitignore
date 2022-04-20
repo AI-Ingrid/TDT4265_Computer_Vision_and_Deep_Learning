@@ -1,12 +1,5 @@
-data/
-checkpoints/
-
-assignment3/__pycache__
-assignment3/data
-assignment3/kladd.ipynb
-
-assignment2/__pycache__
-assignment2/data
-
-assignment1/__pycache__
-assignment1/data
+__pycache__/
+assignment3/
+assignment2/
+assignment1/
+assignment4/
