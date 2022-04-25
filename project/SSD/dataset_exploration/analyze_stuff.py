@@ -132,7 +132,8 @@ def analyze_something(dataloader, cfg):
 
     # Changing the dtype for label to 'category'
     data_frame["label"] = data_frame["label"].astype("category")
-    # Create a new column with the size of each boxes   
+    # Create a new column with the size of each boxes  
+    # # TODO: Gange med høyden og bredden  
     data_frame["size"] = data_frame.apply(lambda row: (row["x_min"] - row["x_max"]) * (row["y_min"] - row["y_max"]), axis=1)    
 
     data_frame.to_csv('dataset_exploration/dataset/data_frame.csv', index=False)
