@@ -82,23 +82,34 @@ def create_sum_plot(data_frame):
 
     # display plot
     plt.show()
+    
+def create_ratio_width_and_height(data_frame, label_text):
+    plt = matplotlib.pyplot
 
-def create_correlation_plot(data_frame):
-    plt.subplots(figsize=(10, 5))
+    # plot bg
+    sns.set_style("whitegrid")
 
-    # Compute the correlation matrix
-    data_frame_corr = data_frame.corr()
+    #Size of the plot
 
-    mask = np.zeros_like(data_frame_corr, dtype=np.bool)
-    mask[np.triu_indices_from(mask)] = True
+    # setting color of the plot
+    color = sns.color_palette('pastel')
 
-    # Generates heatmap masking the upper triangle and shrinking the cbar
-    sns.heatmap(data_frame_corr, mask=mask, center=0, square=True, annot=True, annot_kws={"size": 15}, cbar_kws={"shrink": .8})
+    # Using seaborn to plot it horizontally with 'color'
+    ax = sns.catplot(data=data_frame, x="ratio", y="label", kind="box", palette=color, showfliers=False, order = list(range(0,9)))
+
+    # Title of the graph
+    plt.title('Spread of ratios (height/width) given a label', size = 20)
+
+    # Horizontal axis Label
+    plt.xlabel('Ratio of boxes', size = 17)
+    # Vertical axis Label
+    plt.ylabel('Labels', size = 17)
+    ax.set_yticklabels(label_text['text_labels'], rotation='horizontal', fontsize=5)
 
     # x-axis label size
-    plt.xticks(size = 13, rotation = 0)
-    # y-axis label size
-    plt.yticks(size = 13, rotation = 0)
+    plt.xticks(size = 17)
+    #y-axis label siz
+    plt.yticks(size = 15)
 
     # display plot
     plt.show()
@@ -133,9 +144,15 @@ def analyze_something(dataloader, cfg):
     # Changing the dtype for label to 'category'
     data_frame["label"] = data_frame["label"].astype("category")
     # Create a new column with the size of each boxes   
-    data_frame["size"] = data_frame.apply(lambda row: (row["x_min"] - row["x_max"]) * (row["y_min"] - row["y_max"]), axis=1)    
-
-    data_frame.to_csv('dataset_exploration/dataset/data_frame.csv', index=False)
+    height = 128
+    width = 1024
+    
+    data_frame["size"] = data_frame.apply(lambda row: (width*(row["x_max"] - row["x_min"])) * (height*(row["y_max"] - row["y_min"])), axis=1)
+    data_frame["height"] = data_frame.apply(lambda row: (height*(row["y_max"] - row["y_min"])), axis=1)  
+    data_frame["width"] = data_frame.apply(lambda row: (width*(row["x_max"] - row["x_min"])), axis=1) 
+    data_frame["ratio"] = data_frame.apply(lambda row: (row["height"]/row["width"]), axis=1)  
+    
+    data_frame.to_csv('data_frame.csv', index=False)
     return data_frame
 
 
@@ -166,15 +183,16 @@ def main():
     data_frame["y_min"] = data_frame["y_min"].astype("float64")
 
     # Printing stuff
+    
     print(data_frame.head())
     print(data_frame.info())
     print(data_frame.describe())
 
     # Creating the plots
     label_text = pd.read_csv("dataset_exploration/dataset/labels.csv")
-    create_sum_plot(data_frame)
-    create_box_plot(data_frame,label_text)
-    create_correlation_plot(data_frame)
+    #create_sum_plot(data_frame)
+    #create_box_plot(data_frame,label_text)
+    create_ratio_width_and_height(data_frame, label_text)
 
 
 if __name__ == '__main__':
