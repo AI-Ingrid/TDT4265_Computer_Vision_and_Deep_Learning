@@ -7,7 +7,7 @@ from ssd.data.mnist import MNISTDetectionDataset
 from ssd import utils
 from ssd.data.transforms import Normalize, ToTensor, GroundTruthBoxesToAnchors, RandomHorizontalFlip, RandomSampleCrop
 from .utils import get_dataset_dir, get_output_dir
-
+from ssd.modeling.backbones import FPN
 
 train = dict(
     batch_size=32,
@@ -36,7 +36,7 @@ anchors = L(AnchorBoxes)(
     scale_size_variance=0.2
 )
 
-backbone = L(backbones.BasicModel)(
+backbone = L(FPN)(type="resnet34", pretrained=True)(
     output_channels=[128, 256, 128, 128, 64, 64],
     image_channels="${train.image_channels}",
     output_feature_sizes="${anchors.feature_sizes}"

@@ -69,10 +69,7 @@ data_train = dict(
         is_train=True,
         transform=L(torchvision.transforms.Compose)(transforms=[
             #TODO: Add more augmentations here
-            L(RandomSampleCrop)(),
             L(ToTensor)(),  # ToTensor has to be applied before conversion to anchors.
-            L(RandomHorizontalFlip)(p=0.5),
-            # GroundTruthBoxesToAnchors assigns each ground truth to anchors, required to compute loss in training.
             L(GroundTruthBoxesToAnchors)(anchors="${anchors}", iou_threshold=0.5),
         ])
     ),

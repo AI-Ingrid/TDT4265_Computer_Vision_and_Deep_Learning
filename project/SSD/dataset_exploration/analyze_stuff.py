@@ -143,16 +143,24 @@ def analyze_something(dataloader, cfg):
 
     # Changing the dtype for label to 'category'
     data_frame["label"] = data_frame["label"].astype("category")
+
+    # Create a new column with the size of each boxes  
+    # # TODO: Gange med høyden og bredden  
+    #data_frame["size"] = data_frame.apply(lambda row: (row["x_min"] - row["x_max"]) * (row["y_min"] - row["y_max"]), axis=1)    
+
+    #data_frame.to_csv('dataset_exploration/dataset/data_frame.csv', index=False)
+
     # Create a new column with the size of each boxes   
     height = 128
     width = 1024
-    
+    # TODO: CHECK AFTER MERGE CONFLICT
     data_frame["size"] = data_frame.apply(lambda row: (width*(row["x_max"] - row["x_min"])) * (height*(row["y_max"] - row["y_min"])), axis=1)
     data_frame["height"] = data_frame.apply(lambda row: (height*(row["y_max"] - row["y_min"])), axis=1)  
     data_frame["width"] = data_frame.apply(lambda row: (width*(row["x_max"] - row["x_min"])), axis=1) 
     data_frame["ratio"] = data_frame.apply(lambda row: (row["height"]/row["width"]), axis=1)  
     
     data_frame.to_csv('data_frame.csv', index=False)
+
     return data_frame
 
 
