@@ -1,5 +1,5 @@
 import torch
-from typing import Tuple, List
+from typing import OrderedDict, Tuple, List
 from torch import nn
 import torchvision.models as models
 import torchvision.ops as ops
@@ -72,44 +72,45 @@ class ResNet(torch.nn.Module):
         When done, the array of outputs is passed into the FPN and the outputs from FPN is returned
         """
         out_features = []
+        features_dict = OrderedDict()
 
         # Layer 0
         x = self.forward_first_layer(self.model,x)
         # [1, 64, 32, 256]
-        
+
         # Layer 1
-        x = self.model.layer1(x)
+        features_dict['feat0'] = self.model.layer1(x)
         out_features.append(x)
         # [1, 64, 32, 256] 
-
+        
         # Layer 2
-        x = self.model.layer2(x)
+        features_dict['feat1'] = self.model.layer2(features_dict['feat0'])
         out_features.append(x)
         # [1, 128, 16, 128]
 
         # Layer 3
-        x = self.model.layer3(x)
+        features_dict['feat2'] = self.model.layer3(features_dict['feat1'])
         out_features.append(x)
         # [1, 256, 8, 64]
 
         # Layer 4
-        x = self.model.layer4(x)
+        features_dict['feat3'] = self.model.layer4(features_dict['feat2'])
         out_features.append(x)
         # [1, 512, 4, 32]
 
         # Layer 5
-        x = self.layer5(x)
+        features_dict['feat4'] = self.layer5(features_dict['feat3'])
         out_features.append(x) 
         # [1, 64 , 2, 16]       
         
         # Layer 6
-        x = self.layer6(x)
-        out_features.append(x)  
+        features_dict['feat5'] = self.layer6(features_dict['feat4'])
+        out_features.append(x) 
         # [1, 64 , 1, 8]
         
         # Forward to FPN
         # TODO: OrderedDict()
-        out_features = self.fpn(out_features)
+        out_features = self.fpn(features_dict)
 
         for idx, feature in enumerate(out_features):
             out_channel = self.out_channels[idx]
