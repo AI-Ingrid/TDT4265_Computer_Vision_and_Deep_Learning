@@ -80,39 +80,33 @@ class ResNet(torch.nn.Module):
 
         # Layer 1
         features_dict['feat0'] = self.model.layer1(x)
-        out_features.append(x)
         # [1, 64, 32, 256] 
         
         # Layer 2
         features_dict['feat1'] = self.model.layer2(features_dict['feat0'])
-        out_features.append(x)
         # [1, 128, 16, 128]
 
         # Layer 3
         features_dict['feat2'] = self.model.layer3(features_dict['feat1'])
-        out_features.append(x)
         # [1, 256, 8, 64]
 
         # Layer 4
         features_dict['feat3'] = self.model.layer4(features_dict['feat2'])
-        out_features.append(x)
         # [1, 512, 4, 32]
 
         # Layer 5
         features_dict['feat4'] = self.layer5(features_dict['feat3'])
-        out_features.append(x) 
         # [1, 64 , 2, 16]       
         
         # Layer 6
         features_dict['feat5'] = self.layer6(features_dict['feat4'])
-        out_features.append(x) 
         # [1, 64 , 1, 8]
-        
         # Forward to FPN
-        # TODO: OrderedDict()
         out_features = self.fpn(features_dict)
 
-        for idx, feature in enumerate(out_features):
+        print(out_features)
+
+        for idx, feature in enumerate(out_features.values()):
             out_channel = self.out_channels[idx]
             h, w = self.output_feature_shape[idx]
             expected_shape = (out_channel, h, w)
@@ -120,6 +114,7 @@ class ResNet(torch.nn.Module):
                 f"Expected shape: {expected_shape}, got: {feature.shape[1:]} at output IDX: {idx}"
         assert len(out_features) == len(self.output_feature_shape),\
             f"Expected that the length of the outputted features to be: {len(self.output_feature_shape)}, but it was: {len(out_features)}"
+        return tuple(out_features.values())
         
         # Return a list/typle of all output features from the FPN 
         return tuple(out_features)
