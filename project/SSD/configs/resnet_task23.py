@@ -42,7 +42,7 @@ backbone = L(ResNet)(
     # Without FPN
     #output_channels=[64, 128, 256, 512, 64, 64],
     # With FPN
-    output_channels=[64, 128, 256, 512, 256, 256],
+    output_channels=[512, 512, 512, 512, 512, 512],
     #TODO: Fix output_channels
     image_channels="${train.image_channels}",
     output_feature_sizes="${anchors.feature_sizes}"

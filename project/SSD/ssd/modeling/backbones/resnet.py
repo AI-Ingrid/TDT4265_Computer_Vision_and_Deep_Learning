@@ -47,7 +47,7 @@ class ResNet(torch.nn.Module):
         #self.feature_pyramid_net = ops.FeaturePyramideNetwork(self.output_channels, self.output_feature_shape)
         print("out channels ", self.out_channels)
         print("out feature ", self.output_feature_shape)
-        self.fpn = ops.FeaturePyramidNetwork(self.out_channels, 256)
+        self.fpn = ops.FeaturePyramidNetwork([64, 128, 256, 512, 512, 512], 512)
 
         
     def forward_first_layer(self, model, image):
