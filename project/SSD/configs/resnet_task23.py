@@ -1,8 +1,7 @@
 import torch
 import torchvision
 from torch.optim.lr_scheduler import MultiStepLR, LinearLR
-from project.SSD.ssd.modeling.focal_loss import FocalLoss
-from ssd.modeling import SSD300, SSDMultiboxLoss, backbones, AnchorBoxes
+from ssd.modeling import SSD300, SSDMultiboxLoss, FocalLoss, backbones, AnchorBoxes
 from tops.config import LazyCall as L
 from ssd.data.mnist import MNISTDetectionDataset
 from ssd import utils
@@ -15,7 +14,7 @@ train = dict(
     amp=True,  # Automatic mixed precision
     log_interval=20,
     seed=0,
-    epochs=50,
+    epochs=10,
     _output_dir=get_output_dir(),
     imshape=(300, 300),
     image_channels=3
