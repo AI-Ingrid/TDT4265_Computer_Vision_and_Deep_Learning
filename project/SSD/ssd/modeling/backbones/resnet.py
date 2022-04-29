@@ -53,7 +53,6 @@ class ResNet(torch.nn.Module):
     def forward_first_layer(self, model, image):
         """Executing forward pass for the zeroth Retina Net layer"""
         x = model.conv1(image)
-        # [1, 64, 128, 1024]
         x = model.bn1(x)
         x = model.relu(x)
         x = model.maxpool(x)
@@ -101,10 +100,9 @@ class ResNet(torch.nn.Module):
         # Layer 6
         features_dict['feat5'] = self.layer6(features_dict['feat4'])
         # [1, 64 , 1, 8]
+        
         # Forward to FPN
         out_features = self.fpn(features_dict)
-
-        print(out_features)
 
         for idx, feature in enumerate(out_features.values()):
             out_channel = self.out_channels[idx]
@@ -115,7 +113,4 @@ class ResNet(torch.nn.Module):
         assert len(out_features) == len(self.output_feature_shape),\
             f"Expected that the length of the outputted features to be: {len(self.output_feature_shape)}, but it was: {len(out_features)}"
         return tuple(out_features.values())
-        
-        # Return a list/typle of all output features from the FPN 
-        return tuple(out_features)
 
