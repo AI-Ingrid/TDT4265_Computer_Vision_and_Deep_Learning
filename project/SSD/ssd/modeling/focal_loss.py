@@ -40,8 +40,8 @@ class FocalLoss(nn.Module):
         self.scale_xy = 1.0/anchors.scale_xy
         self.scale_wh = 1.0/anchors.scale_wh
 
-        self.alpha = 0.01
-        self.gamma = 0.01
+        self.alpha = torch.Tensor([0.01, 1, 1, 1, 1, 1, 1, 1, 1]).cpu()
+        self.gamma = 2
 
         self.sl1_loss = nn.SmoothL1Loss(reduction='none')
         self.anchors = nn.Parameter(anchors(order="xywh").transpose(0, 1).unsqueeze(dim = 0),
@@ -56,10 +56,7 @@ class FocalLoss(nn.Module):
         gwh = self.scale_wh*(loc[:, 2:, :]/self.anchors[:, 2:, :]).log()
         return torch.cat((gxy, gwh), dim=1).contiguous()
     
-    def one_hot_encode(self, to_encode):
-        encoded = F.one_hot(to_encode)
-        return encoded
-
+   
     def compute_focal_loss(self, output, labels):
         """
         Args: 
@@ -68,37 +65,34 @@ class FocalLoss(nn.Module):
         Return:
             focal_loss: The focal loss (float)
         """
-        #print('Ouput ',output)
-        #print('Ouput shape ',output.shape)
+        #print('Ouput shape given ',output.shape)
         # Get softmax probability for each classes
-        output_probs = F.softmax(output, dim=1).cpu().detach().numpy()
-        output_probs = np.moveaxis(output_probs, -1, 1)
-
+        output_probs_soft = F.softmax(output, dim=1).transpose(1, 2).cpu()
+        output_probs_log = F.log_softmax(output, dim=1).transpose(1, 2).cpu()
         
-        # One-hot encode the labels
-        labels = F.one_hot(labels).cpu().detach().numpy()
+        #print('Ouput shape after reshape ', output_probs_soft.shape)
+        #print('Ouput shape after reshape ', output_probs_log.shape)
+        # Reshape the output_probs to 2D
+        #output_probs = np.reshape()
+        
+        # KOK
+        #soft = torch.permute(F.softmax(output, dim=1),(0, 2, 1))
+        #print("KOKs shit:", soft.shape)
+        
+        # Michals stuff
+        confs = output.transpose(1, 2)
+        #print("michals after transpose: " ,confs.shape)
+        confs = confs.contiguous().view(-1, confs.size(2))
+        #print("michals shit: ",  confs.shape)
 
-        # TODO LOG 10 ?
-        # k = 0
-        # (32, 65440, 9)
-        print("Labes shape", labels.shape)
-        # (32, 9, 65440) -> T : (9, 65440, 32)
-        print("Prob shape", np.log10(output_probs).shape)
-        # 0.01 * 1 - (32, 9, 65440)^0.01   
-        matrise_1 = self.alpha * (1-output_probs)**self.gamma
-        # (32, 65440, 9) @ (32, 9, 65440) = (32, 65440, 65440)
-        matrise_2 = labels * np.log10(output_probs)
-        print("matrise1 shape:", matrise_1.shape)
-        print("matrise2 shape:", matrise_2.shape)
-        loss = - np.sum(matrise_1 * matrise_2)
-        # k > 1
-        self.alpha = 1
-        self.gamma = 1
-        # Cn = -torch.sum(alpha*(1-soft)**gamma*targets*log_soft)
-        loss += -self.alpha * ((1-output_probs)**self.gamma * labels) * np.log10(output_probs)
-        print("loss type new: ", type(torch.from_numpy(loss).cuda()))
-        loss = torch.sum(torch.from_numpy(loss).cuda())
-        return loss.mean()
+        # One-hot encode the labels
+        labels = F.one_hot(labels).cpu()
+        
+        # Calculate focal loss
+        loss = -self.alpha * (1-output_probs_soft)**self.gamma * labels * output_probs_log
+        #print("loss type new: ", type(torch.from_numpy(loss).cuda()))
+        loss = torch.sum(loss).cpu()
+        return loss.mean().cpu()
 
         """
         KOK
@@ -142,10 +136,9 @@ class FocalLoss(nn.Module):
         
         """
         
-
+        
         classification_loss = self.compute_focal_loss(confs, gt_labels)
-        total_loss = 0
-        to_log = 0 
+        gt_bbox = gt_bbox.transpose(1, 2).contiguous() # reshape to [batch_size, 4, num_anchors]
 
         
         """
