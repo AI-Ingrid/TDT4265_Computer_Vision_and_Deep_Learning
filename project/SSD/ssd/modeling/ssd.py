@@ -85,7 +85,7 @@ class SSD300(nn.Module):
 
 
 class Layer(nn.Sequential):
-    def __init__(self, in_channels, num_classes, num_boxes):
+    def __init__(self, in_channels, out_channels):
         super().__init__(
             nn.ReLU(),
             nn.Conv2d(in_channels=in_channels, out_channels= in_channels, kernel_size=3, stride=1, padding=1),
@@ -96,7 +96,7 @@ class Layer(nn.Sequential):
             nn.ReLU(),
             nn.Conv2d(in_channels=in_channels, out_channels= in_channels, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
-            nn.Conv2d(in_channels=in_channels, out_channels= num_classes * num_boxes, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(in_channels=in_channels, out_channels= out_channels, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
         )
 
@@ -116,37 +116,30 @@ class RetinaNet(nn.Module):
         self.loss_func = loss_objective
         self.num_classes = num_classes
         self.num_boxes = 6
-        self.regression_heads = []
-        self.classification_heads = []
+        self.regression_heads =  Layer(512, self.num_boxes * 4)
+        self.classification_heads = Layer(512, self.num_boxes * self.num_classes)
 
-        #print('feature extractor ', self.feature_extractor)
-        print('feature extractor ', self.feature_extractor)
+        #self.regression_heads = nn.ModuleList(self.regression_heads)
+        #self.classification_heads = nn.ModuleList(self.classification_heads)
 
-        self.regression_layer = Layer(512, self.num_boxes, 4)
-        self.classification_layer = Layer(512, self.num_boxes, self.num_classes)
-        
-        # Create deeper regression head
-        for i in zip(anchors.num_boxes_per_fmap, self.feature_extractor.out_channels):
-            self.regression_heads.append(self.regression_layer)
-            self.classification_heads.append(self.classification_layer)
-
-        self.regression_heads = nn.ModuleList(self.regression_heads)
-        self.classification_heads = nn.ModuleList(self.classification_heads)
         self.anchor_encoder = AnchorEncoder(anchors)
         self._init_weights()
+        print('length of regression heads ', len(self.regression_heads))
+        print("Classification head lenght:", len(self.classification_heads))
 
     def _init_weights(self):
         layers = [*self.regression_heads, *self.classification_heads]
         for layer in layers:
             for param in layer.parameters():
                 if param.dim() > 1: nn.init.xavier_uniform_(param)
+            
 
     def regress_boxes(self, features):
         locations = []
         confidences = []
         for idx, x in enumerate(features):
-            bbox_delta = self.regression_heads[idx](x).view(x.shape[0], 4, -1)
-            bbox_conf = self.classification_heads[idx](x).view(x.shape[0], self.num_classes, -1)
+            bbox_delta = self.regression_heads(x).view(x.shape[0], 4, -1)
+            bbox_conf = self.classification_heads(x).view(x.shape[0], self.num_classes, -1)
             locations.append(bbox_delta)
             confidences.append(bbox_conf)
         bbox_delta = torch.cat(locations, 2).contiguous()

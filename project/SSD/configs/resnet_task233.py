@@ -48,8 +48,8 @@ backbone = L(ResNet)(
     output_feature_sizes="${anchors.feature_sizes}"
 )
 
-loss_objective = L(SSDMultiboxLoss)(anchors="${anchors}")
-#loss_objective = L(FocalLoss)(anchors="${anchors}")
+#loss_objective = L(SSDMultiboxLoss)(anchors="${anchors}")
+loss_objective = L(FocalLoss)(anchors="${anchors}")
 
 model = L(RetinaNet)(
     feature_extractor="${backbone}",
