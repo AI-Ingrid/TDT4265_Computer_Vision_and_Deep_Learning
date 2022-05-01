@@ -1,11 +1,11 @@
 import torch
 import torchvision
 from torch.optim.lr_scheduler import MultiStepLR, LinearLR
-from ssd.modeling import RetinaNet, SSD300, SSDMultiboxLoss, FocalLoss, backbones, AnchorBoxes
+from ssd.modeling import SSD300, SSDMultiboxLoss, FocalLoss, backbones, AnchorBoxes
 from tops.config import LazyCall as L
 from ssd.data.mnist import MNISTDetectionDataset
 from ssd import utils
-from ssd.data.transforms import Normalize, ToTensor, GroundTruthBoxesToAnchors
+from ssd.data.transforms import Normalize, ToTensor, GroundTruthBoxesToAnchors, RandomHorizontalFlip, RandomSampleCrop
 from .utils import get_dataset_dir, get_output_dir
 from ssd.modeling.backbones import ResNet
 
@@ -49,9 +49,8 @@ backbone = L(ResNet)(
 )
 
 loss_objective = L(SSDMultiboxLoss)(anchors="${anchors}")
-#loss_objective = L(FocalLoss)(anchors="${anchors}")
 
-model = L(RetinaNet)(
+model = L(SSD300)(
     feature_extractor="${backbone}",
     anchors="${anchors}",
     loss_objective="${loss_objective}",
@@ -76,8 +75,9 @@ data_train = dict(
         is_train=True,
         transform=L(torchvision.transforms.Compose)(transforms=[
             #TODO: Add more augmentations here
+            L(RandomSampleCrop)(),
             L(ToTensor)(),  # ToTensor has to be applied before conversion to anchors.
-           
+            L(RandomHorizontalFlip)(p=0.5),
             # GroundTruthBoxesToAnchors assigns each ground truth to anchors, required to compute loss in training.
             L(GroundTruthBoxesToAnchors)(anchors="${anchors}", iou_threshold=0.5),
         ])

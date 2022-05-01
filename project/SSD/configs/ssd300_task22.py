@@ -68,7 +68,6 @@ data_train = dict(
         data_dir=get_dataset_dir("mnist_object_detection/train"),
         is_train=True,
         transform=L(torchvision.transforms.Compose)(transforms=[
-            #TODO: Add more augmentations here
             L(RandomSampleCrop)(),
             L(ToTensor)(),  # ToTensor has to be applied before conversion to anchors.
             L(RandomHorizontalFlip)(p=0.5),
