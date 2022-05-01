@@ -26,7 +26,7 @@ class SSD300(nn.Module):
         for n_boxes, out_ch in zip(anchors.num_boxes_per_fmap, self.feature_extractor.out_channels):
             self.regression_heads.append(nn.Conv2d(out_ch, n_boxes * 4, kernel_size=3, padding=1))
             self.classification_heads.append(nn.Conv2d(out_ch, n_boxes * self.num_classes, kernel_size=3, padding=1))
-
+        
         self.regression_heads = nn.ModuleList(self.regression_heads)
         self.classification_heads = nn.ModuleList(self.classification_heads)
         self.anchor_encoder = AnchorEncoder(anchors)
@@ -119,12 +119,17 @@ class RetinaNet(nn.Module):
         self.regression_heads = []
         self.classification_heads = []
 
-        # Create deeper regression head
-        self.regression_heads = Layer(512, self.num_boxes, 4)
+        #print('feature extractor ', self.feature_extractor)
+        print('feature extractor ', self.feature_extractor)
 
-        # Create deeper classification heads
-        self.classification_heads = Layer(512, self.num_boxes, self.num_classes)
-  
+        self.regression_layer = Layer(512, self.num_boxes, 4)
+        self.classification_layer = Layer(512, self.num_boxes, self.num_classes)
+        
+        # Create deeper regression head
+        for i in zip(anchors.num_boxes_per_fmap, self.feature_extractor.out_channels):
+            self.regression_heads.append(self.regression_layer)
+            self.classification_heads.append(self.classification_layer)
+
         self.regression_heads = nn.ModuleList(self.regression_heads)
         self.classification_heads = nn.ModuleList(self.classification_heads)
         self.anchor_encoder = AnchorEncoder(anchors)
