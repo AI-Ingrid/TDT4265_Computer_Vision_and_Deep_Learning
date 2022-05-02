@@ -37,9 +37,6 @@ class RetinaNet(nn.Module):
         self.regression_heads =  Layer(512, self.num_boxes * 4)
         self.classification_heads = Layer(512, self.num_boxes * self.num_classes)
 
-        #self.regression_heads = nn.ModuleList(self.regression_heads)
-        #self.classification_heads = nn.ModuleList(self.classification_heads)
-
         self.anchor_encoder = AnchorEncoder(anchors)
         self._init_weights()
 
@@ -47,13 +44,21 @@ class RetinaNet(nn.Module):
         layers = [*self.regression_heads, *self.classification_heads]
         for layer in layers:
             for param in layer.parameters():
-                if param.dim() > 1: nn.init.xavier_uniform_(param)
+                if param.dim() > 1:
+                    nn.init.xavier_uniform_(param)
         
         p = 0.99
         K = self.num_classes
         bias = np.log(p*(K-1)/(1-p))
-
-
+        
+        # Set bias to 0 for all layers
+        for class_head, regr_head in zip(self.classification_heads, self.regression_heads):
+            if hasattr(class_head, "bias"):
+                class_head.bias.data.fill_(0)
+                regr_head.bias.data.fill_(0)
+        
+        # Set bias to np.log(p*(K-1)/(1-p)) for the background layer
+        nn.init.constant_(self.classification_heads[-2].bias.data, bias)
 
     def regress_boxes(self, features):
         locations = []
