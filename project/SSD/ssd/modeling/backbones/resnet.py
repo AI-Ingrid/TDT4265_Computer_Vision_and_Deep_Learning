@@ -7,7 +7,6 @@ import torchvision.ops as ops
 
 class Layer(nn.Sequential):
     def __init__(self,channels,layer_index):
-        # [1, 512, 4, 32]
         super().__init__(
             nn.ReLU(),
             nn.Conv2d(in_channels=channels[layer_index-1], out_channels=channels[layer_index], kernel_size=1, stride=1, padding=0),
