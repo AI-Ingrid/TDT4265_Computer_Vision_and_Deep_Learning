@@ -1,7 +1,6 @@
 import torch
 import torchvision
 from torch.optim.lr_scheduler import MultiStepLR, LinearLR
-from project.SSD.ssd.modeling.retinanet_without_init_weight import RetinaNetWithoutInitWeight
 from ssd.modeling import RetinaNet, RetinaNetWithoutInitWeight, SSD300, SSDMultiboxLoss, FocalLoss, backbones, AnchorBoxes
 from tops.config import LazyCall as L
 from ssd.data.mnist import MNISTDetectionDataset
