@@ -44,6 +44,7 @@ class RetinaNet(nn.Module):
         layers = [*self.regression_heads, *self.classification_heads]
         for layer in layers:
             for param in layer.parameters():
+                print("Bias: ", param.bias)
                 if param.dim() > 1: nn.init.xavier_uniform_(param)
             
 
