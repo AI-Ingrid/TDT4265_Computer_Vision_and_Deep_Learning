@@ -4,3 +4,4 @@ from .ssd_multibox_loss import SSDMultiboxLoss
 from .focal_loss import FocalLoss
 from .ssd import SSD300
 from .retinanet import RetinaNet
+from .retinanet_without_init_weight import RetinaNetWithoutInitWeight
