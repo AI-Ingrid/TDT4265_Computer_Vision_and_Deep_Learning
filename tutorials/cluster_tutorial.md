@@ -11,7 +11,7 @@ The system is only accessible from an NTNU IP address, so you will have to use *
 **NOTE**: For all commands, replace the username **haakohu** with your own NTNU username.
 1. Log into the main server via ssh:
 ```
-    ssh haakohu@snotra.idi.ntnu.no
+    ssh taheeraa@snotra.idi.ntnu.no
 ```
 ![](images/ssh.png)
 ![](images/login.png)

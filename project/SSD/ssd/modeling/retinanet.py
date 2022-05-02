@@ -45,7 +45,7 @@ class RetinaNet(nn.Module):
         for layer in layers:
             for param in layer.parameters():
                 if param.dim() > 1:
-                    nn.init.xavier_uniform_(param)
+                    nn.init.normal_(param, 0, 0.01)
         
         p = 0.99
         K = self.num_classes
