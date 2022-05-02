@@ -10,12 +10,6 @@ class Layer(nn.Sequential):
         # [1, 512, 4, 32]
         super().__init__(
             nn.ReLU(),
-            #[64, 128, 256, 512, 64, 64],
-            #i= 512, o=64
-            #i=64, o=64
-            # next
-            # i=64, o=64
-            # i=64, o=64
             nn.Conv2d(in_channels=channels[layer_index-1], out_channels=channels[layer_index], kernel_size=1, stride=1, padding=0),
             nn.ReLU(),
             nn.Conv2d(in_channels=channels[layer_index], out_channels=channels[layer_index], kernel_size=1, stride=2, padding=0),
