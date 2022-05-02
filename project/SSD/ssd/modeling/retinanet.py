@@ -3,8 +3,17 @@ import torch.nn as nn
 from .anchor_encoder import AnchorEncoder
 from torchvision.ops import batched_nms
 
+class Layer(nn.Sequential):
+    def __init__(self, in_channels, out_channels):
+        super().__init__(
+            nn.ReLU(),
+            nn.Conv2d(in_channels=in_channels, out_channels= in_channels, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(in_channels=in_channels, out_channels= out_channels, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
+        )
 
-class SSD300(nn.Module):
+class RetinaNet(nn.Module):
     def __init__(self, 
             feature_extractor: nn.Module,
             anchors,
@@ -19,31 +28,31 @@ class SSD300(nn.Module):
         self.feature_extractor = feature_extractor
         self.loss_func = loss_objective
         self.num_classes = num_classes
-        self.regression_heads = []
-        self.classification_heads = []
+        self.num_boxes = 6
+        self.regression_heads =  Layer(512, self.num_boxes * 4)
+        self.classification_heads = Layer(512, self.num_boxes * self.num_classes)
 
-        # Initialize output heads that are applied to each feature map from the backbone.
-        for n_boxes, out_ch in zip(anchors.num_boxes_per_fmap, self.feature_extractor.out_channels):
-            self.regression_heads.append(nn.Conv2d(out_ch, n_boxes * 4, kernel_size=3, padding=1))
-            self.classification_heads.append(nn.Conv2d(out_ch, n_boxes * self.num_classes, kernel_size=3, padding=1))
-        
-        self.regression_heads = nn.ModuleList(self.regression_heads)
-        self.classification_heads = nn.ModuleList(self.classification_heads)
+        #self.regression_heads = nn.ModuleList(self.regression_heads)
+        #self.classification_heads = nn.ModuleList(self.classification_heads)
+
         self.anchor_encoder = AnchorEncoder(anchors)
         self._init_weights()
+        print('length of regression heads ', len(self.regression_heads))
+        print("Classification head lenght:", len(self.classification_heads))
 
     def _init_weights(self):
         layers = [*self.regression_heads, *self.classification_heads]
         for layer in layers:
             for param in layer.parameters():
                 if param.dim() > 1: nn.init.xavier_uniform_(param)
+            
 
     def regress_boxes(self, features):
         locations = []
         confidences = []
         for idx, x in enumerate(features):
-            bbox_delta = self.regression_heads[idx](x).view(x.shape[0], 4, -1)
-            bbox_conf = self.classification_heads[idx](x).view(x.shape[0], self.num_classes, -1)
+            bbox_delta = self.regression_heads(x).view(x.shape[0], 4, -1)
+            bbox_conf = self.classification_heads(x).view(x.shape[0], self.num_classes, -1)
             locations.append(bbox_delta)
             confidences.append(bbox_conf)
         bbox_delta = torch.cat(locations, 2).contiguous()
@@ -82,5 +91,28 @@ class SSD300(nn.Module):
                 boxes[:, [1, 3]] *= W
             predictions.append((boxes, categories, scores))
         return predictions
+ 
+def filter_predictions(
+        boxes_ltrb: torch.Tensor, confs: torch.Tensor,
+        nms_iou_threshold: float, max_output: int, score_threshold: float):
+        """
+            boxes_ltrb: shape [N, 4]
+            confs: shape [N, num_classes]
+        """
+        assert 0 <= nms_iou_threshold <= 1
+        assert max_output > 0
+        assert 0 <= score_threshold <= 1
+        scores, category = confs.max(dim=1)
 
+        # 1. Remove low confidence boxes / background boxes
+        mask = (scores > score_threshold).logical_and(category != 0)
+        boxes_ltrb = boxes_ltrb[mask]
+        scores = scores[mask]
+        category = category[mask]
 
+        # 2. Perform non-maximum-suppression
+        keep_idx = batched_nms(boxes_ltrb, scores, category, iou_threshold=nms_iou_threshold)
+
+        # 3. Only keep max_output best boxes (NMS returns indices in sorted order, decreasing w.r.t. scores)
+        keep_idx = keep_idx[:max_output]
+        return boxes_ltrb[keep_idx], category[keep_idx], scores[keep_idx]
