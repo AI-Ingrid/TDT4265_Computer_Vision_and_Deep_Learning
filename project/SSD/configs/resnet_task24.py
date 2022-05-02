@@ -49,7 +49,7 @@ backbone = L(ResNet)(
     output_feature_sizes="${anchors.feature_sizes}"
 )
 
-loss_objective = L(FocalLoss)(anchors="${anchors}")
+loss_objective = L(FocalLoss)(anchors="${anchors}") # TODO change alpha on focal loss
 
 model = L(SSD300)(
     feature_extractor="${backbone}",
