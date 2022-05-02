@@ -7,6 +7,7 @@ import numpy as np
 class Layer(nn.Sequential):
     def __init__(self, in_channels, out_channels):
         super().__init__(
+            nn.Conv2d(in_channels=in_channels, out_channels= in_channels, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
             nn.Conv2d(in_channels=in_channels, out_channels= in_channels, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
@@ -15,7 +16,6 @@ class Layer(nn.Sequential):
             nn.Conv2d(in_channels=in_channels, out_channels= in_channels, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
             nn.Conv2d(in_channels=in_channels, out_channels= out_channels, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(),
         )
 
 class RetinaNet(nn.Module):
@@ -58,7 +58,7 @@ class RetinaNet(nn.Module):
                 regr_head.bias.data.fill_(0)
         
         # Set bias to np.log(p*(K-1)/(1-p)) for the background layer
-        nn.init.constant_(self.classification_heads[-2].bias.data, bias)
+        nn.init.constant_(self.classification_heads[-1].bias.data, bias)
 
     def regress_boxes(self, features):
         locations = []
