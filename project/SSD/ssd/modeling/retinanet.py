@@ -2,10 +2,15 @@ import torch
 import torch.nn as nn
 from .anchor_encoder import AnchorEncoder
 from torchvision.ops import batched_nms
+import numpy as np
 
 class Layer(nn.Sequential):
     def __init__(self, in_channels, out_channels):
         super().__init__(
+            nn.ReLU(),
+            nn.Conv2d(in_channels=in_channels, out_channels= in_channels, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(in_channels=in_channels, out_channels= in_channels, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
             nn.Conv2d(in_channels=in_channels, out_channels= in_channels, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
@@ -37,16 +42,18 @@ class RetinaNet(nn.Module):
 
         self.anchor_encoder = AnchorEncoder(anchors)
         self._init_weights()
-        print('length of regression heads ', len(self.regression_heads))
-        print("Classification head lenght:", len(self.classification_heads))
 
     def _init_weights(self):
         layers = [*self.regression_heads, *self.classification_heads]
         for layer in layers:
             for param in layer.parameters():
-                print("Bias: ", param.bias)
                 if param.dim() > 1: nn.init.xavier_uniform_(param)
-            
+        
+        p = 0.99
+        K = self.num_classes
+        bias = np.log(p*(K-1)/(1-p))
+
+
 
     def regress_boxes(self, features):
         locations = []
