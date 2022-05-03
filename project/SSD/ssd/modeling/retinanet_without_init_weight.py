@@ -34,8 +34,8 @@ class RetinaNetWithoutInitWeight(nn.Module):
         self.loss_func = loss_objective
         self.num_classes = num_classes
         self.num_boxes = 6
-        self.regression_heads =  Layer(512, self.num_boxes * 4)
-        self.classification_heads = Layer(512, self.num_boxes * self.num_classes)
+        self.regression_heads =  Layer(256, self.num_boxes * 4)
+        self.classification_heads = Layer(256, self.num_boxes * self.num_classes)
 
         self.anchor_encoder = AnchorEncoder(anchors)
         self._init_weights()

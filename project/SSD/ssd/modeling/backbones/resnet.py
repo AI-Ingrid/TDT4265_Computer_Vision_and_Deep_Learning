@@ -6,14 +6,15 @@ import torchvision.ops as ops
 
 
 class Layer(nn.Sequential):
-    def __init__(self,channels,layer_index):
+    def __init__(self,in_channels,out_channels):
         super().__init__(
             nn.ReLU(),
-            nn.Conv2d(in_channels=channels[layer_index-1], out_channels=channels[layer_index], kernel_size=1, stride=1, padding=0),
+            nn.Conv2d(in_channels=in_channels, out_channels=in_channels, kernel_size=1, stride=1, padding=0),
             nn.ReLU(),
-            nn.Conv2d(in_channels=channels[layer_index], out_channels=channels[layer_index], kernel_size=1, stride=2, padding=0),
+            nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=1, stride=2, padding=0),
             nn.ReLU(),
         )
+
 
 class ResNet(torch.nn.Module):
     """
@@ -32,16 +33,19 @@ class ResNet(torch.nn.Module):
         self.model = models.resnet34(pretrained=True)
         
         # Create two more layers
-        self.layer5 = Layer(self.out_channels, 4)
-        self.layer6 = Layer(self.out_channels, 5)
+        self.layer5 = Layer(512, 256)
+        self.layer6 = Layer(256, 256)
         
         # Create a FPN with all the outputs
         # FPN tar inn en liste med num channels per lag (liste med features) og antall output kanaler av hver features
         #self.feature_pyramid_net = ops.FeaturePyramideNetwork(self.output_channels, self.output_feature_shape)
         print("out channels ", self.out_channels)
         print("out feature ", self.output_feature_shape)
-        self.fpn = ops.FeaturePyramidNetwork([64, 128, 256, 512, 512, 512], 512)
-
+        # self.fpn = ops.FeaturePyramidNetwork([64 , 128, 256, 512, 256, 256], 128)
+        # AssertionError: Expected shape: (64, 32, 256), got: torch.Size([128, 32, 256]) at output IDX: 0
+        # self.fpn = ops.FeaturePyramidNetwork([1024 , 128, 256, 512, 256, 512], 256)
+        # RuntimeError: Given groups=1, weight of size [256, 512, 1, 1], expected input[1, 256, 1, 8] to have 512 channels, but got 256 channels instead
+        self.fpn = ops.FeaturePyramidNetwork([64 , 128, 256, 512, 256, 256], 256)
         
     def forward_first_layer(self, model, image):
         """Executing forward pass for the zeroth Retina Net layer"""
@@ -68,31 +72,31 @@ class ResNet(torch.nn.Module):
 
         # Layer 0
         x = self.forward_first_layer(self.model,x)
-        # [1, 64, 32, 256]
+        print('x: ', x.shape)
 
         # Layer 1
         features_dict['feat0'] = self.model.layer1(x)
-        # [1, 64, 32, 256] 
+        print('feat 0: ', features_dict['feat0'].shape)
         
         # Layer 2
         features_dict['feat1'] = self.model.layer2(features_dict['feat0'])
-        # [1, 128, 16, 128]
+        print('feat 1: ', features_dict['feat1'].shape)
 
         # Layer 3
         features_dict['feat2'] = self.model.layer3(features_dict['feat1'])
-        # [1, 256, 8, 64]
+        print('feat 2: ', features_dict['feat2'].shape)
 
         # Layer 4
         features_dict['feat3'] = self.model.layer4(features_dict['feat2'])
-        # [1, 512, 4, 32]
+        print('feat 3: ', features_dict['feat3'].shape)
 
         # Layer 5
         features_dict['feat4'] = self.layer5(features_dict['feat3'])
-        # [1, 64 , 2, 16]       
+        print('feat 4: ', features_dict['feat4'].shape)
         
         # Layer 6
         features_dict['feat5'] = self.layer6(features_dict['feat4'])
-        # [1, 64 , 1, 8]
+        print('feat 5: ', features_dict['feat5'].shape)
         
         # Forward to FPN
         out_features = self.fpn(features_dict)

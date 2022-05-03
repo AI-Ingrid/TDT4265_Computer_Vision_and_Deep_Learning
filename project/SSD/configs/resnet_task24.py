@@ -11,7 +11,7 @@ from ssd.modeling.backbones import ResNet
 from ssd.data import TDT4265Dataset
 
 train = dict(
-    batch_size=32 #TODO: 16,
+    batch_size=32, #TODO: 16,
     amp=True,  # Automatic mixed precision
     log_interval=20,
     seed=0,
@@ -43,7 +43,7 @@ backbone = L(ResNet)(
     # Without FPN
     #output_channels=[64, 128, 256, 512, 64, 64],
     # With FPN
-    output_channels=[512, 512, 512, 512, 512, 512],
+    output_channels=[256, 256, 256, 256, 256, 256],
     #TODO: Fix output_channels
     image_channels="${train.image_channels}",
     output_feature_sizes="${anchors.feature_sizes}"
