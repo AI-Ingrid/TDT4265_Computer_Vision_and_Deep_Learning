@@ -39,8 +39,6 @@ class ResNet(torch.nn.Module):
         # Create a FPN with all the outputs
         # FPN tar inn en liste med num channels per lag (liste med features) og antall output kanaler av hver features
         #self.feature_pyramid_net = ops.FeaturePyramideNetwork(self.output_channels, self.output_feature_shape)
-        print("out channels ", self.out_channels)
-        print("out feature ", self.output_feature_shape)
         # self.fpn = ops.FeaturePyramidNetwork([64 , 128, 256, 512, 256, 256], 128)
         # AssertionError: Expected shape: (64, 32, 256), got: torch.Size([128, 32, 256]) at output IDX: 0
         # self.fpn = ops.FeaturePyramidNetwork([1024 , 128, 256, 512, 256, 512], 256)
@@ -70,33 +68,25 @@ class ResNet(torch.nn.Module):
         out_features = []
         features_dict = OrderedDict()
 
-        # Layer 0
-        x = self.forward_first_layer(self.model,x)
-        #print('x: ', x.shape)
 
         # Layer 1
         features_dict['feat0'] = self.model.layer1(x)
-        #print('feat 0: ', features_dict['feat0'].shape)
         
         # Layer 2
         features_dict['feat1'] = self.model.layer2(features_dict['feat0'])
-        #print('feat 1: ', features_dict['feat1'].shape)
 
         # Layer 3
         features_dict['feat2'] = self.model.layer3(features_dict['feat1'])
-        #print('feat 2: ', features_dict['feat2'].shape)
 
         # Layer 4
         features_dict['feat3'] = self.model.layer4(features_dict['feat2'])
-        #print('feat 3: ', features_dict['feat3'].shape)
 
         # Layer 5
         features_dict['feat4'] = self.layer5(features_dict['feat3'])
-        #print('feat 4: ', features_dict['feat4'].shape)
         
         # Layer 6
         features_dict['feat5'] = self.layer6(features_dict['feat4'])
-        #print('feat 5: ', features_dict['feat5'].shape)
+
         
         # Forward to FPN
         out_features = self.fpn(features_dict)
