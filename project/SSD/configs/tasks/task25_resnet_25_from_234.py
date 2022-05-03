@@ -1,4 +1,5 @@
 # Inherit configs from the default ssd300
+import torch
 import torchvision
 from ssd.data import TDT4265Dataset
 from tops.config import LazyCall as L
