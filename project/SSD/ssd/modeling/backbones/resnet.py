@@ -54,6 +54,8 @@ class ResNet(torch.nn.Module):
         return x
 
     def forward(self, x):
+        #print("out channels ", self.out_channels)
+        #print("out feature ", self.output_feature_shape)
         """
         Performing forward pass for a layer at the time and saving every output in an array. 
         The forward functiom should output features with shape:
@@ -67,6 +69,13 @@ class ResNet(torch.nn.Module):
         """
         out_features = []
         features_dict = OrderedDict()
+
+
+
+        
+        # Layer 0
+        x = self.forward_first_layer(self.model,x)
+        #print('x: ', x.shape)
 
 
         # Layer 1
