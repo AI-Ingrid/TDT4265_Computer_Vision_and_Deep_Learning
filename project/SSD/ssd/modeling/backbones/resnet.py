@@ -72,31 +72,31 @@ class ResNet(torch.nn.Module):
 
         # Layer 0
         x = self.forward_first_layer(self.model,x)
-        print('x: ', x.shape)
+        #print('x: ', x.shape)
 
         # Layer 1
         features_dict['feat0'] = self.model.layer1(x)
-        print('feat 0: ', features_dict['feat0'].shape)
+        #print('feat 0: ', features_dict['feat0'].shape)
         
         # Layer 2
         features_dict['feat1'] = self.model.layer2(features_dict['feat0'])
-        print('feat 1: ', features_dict['feat1'].shape)
+        #print('feat 1: ', features_dict['feat1'].shape)
 
         # Layer 3
         features_dict['feat2'] = self.model.layer3(features_dict['feat1'])
-        print('feat 2: ', features_dict['feat2'].shape)
+        #print('feat 2: ', features_dict['feat2'].shape)
 
         # Layer 4
         features_dict['feat3'] = self.model.layer4(features_dict['feat2'])
-        print('feat 3: ', features_dict['feat3'].shape)
+        #print('feat 3: ', features_dict['feat3'].shape)
 
         # Layer 5
         features_dict['feat4'] = self.layer5(features_dict['feat3'])
-        print('feat 4: ', features_dict['feat4'].shape)
+        #print('feat 4: ', features_dict['feat4'].shape)
         
         # Layer 6
         features_dict['feat5'] = self.layer6(features_dict['feat4'])
-        print('feat 5: ', features_dict['feat5'].shape)
+        #print('feat 5: ', features_dict['feat5'].shape)
         
         # Forward to FPN
         out_features = self.fpn(features_dict)
