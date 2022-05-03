@@ -40,6 +40,7 @@ class FocalLoss(nn.Module):
         self.scale_xy = 1.0/anchors.scale_xy
         self.scale_wh = 1.0/anchors.scale_wh
 
+        self.num_classes = 8 + 1
         self.alpha = torch.Tensor([0.01, 1, 1, 1, 1, 1, 1, 1, 1]).cpu()
         self.gamma = 2
 
@@ -65,49 +66,20 @@ class FocalLoss(nn.Module):
         Return:
             focal_loss: The focal loss (float)
         """
-        #print('Ouput shape given ',output.shape)
         # Get softmax probability for each classes
         output_probs_soft = F.softmax(output, dim=1).transpose(1, 2).cpu()
         output_probs_log = F.log_softmax(output, dim=1).transpose(1, 2).cpu()
         
-        #print('Ouput shape after reshape ', output_probs_soft.shape)
-        #print('Ouput shape after reshape ', output_probs_log.shape)
-        # Reshape the output_probs to 2D
-        #output_probs = np.reshape()
-        
-        # KOK
-        #soft = torch.permute(F.softmax(output, dim=1),(0, 2, 1))
-        #print("KOKs shit:", soft.shape)
-        
-        # Michals stuff
         confs = output.transpose(1, 2)
-        #print("michals after transpose: " ,confs.shape)
         confs = confs.contiguous().view(-1, confs.size(2))
-        #print("michals shit: ",  confs.shape)
 
         # One-hot encode the labels
-        labels = F.one_hot(labels).cpu()
-        
-        # Calculate focal loss
+        labels = F.one_hot(labels, num_classes=self.num_classes).cpu()
         loss = -self.alpha * (1-output_probs_soft)**self.gamma * labels * output_probs_log
-        #print("loss type new: ", type(torch.from_numpy(loss).cuda()))
+        
+
         loss = torch.sum(loss).cpu()
         return loss.mean().cpu()
-
-        """
-        KOK
-        """
-        targets = F.one_hot(targets, 9) # Transform targets from [batch size, num_boxes] to [batch size, num_boxes, num_categories]
-    
-        log_soft = torch.permute(F.log_softmax(outputs, dim=1),(0, 2, 1))
-        soft = torch.permute(F.softmax(outputs, dim=1),(0, 2, 1))
-        assert targets.shape == log_soft.shape,\
-            f"Targets shape: {targets.shape}, outputs: {log_soft.shape}"
-
-        Cn = -torch.sum(alpha*(1-soft)**gamma*targets*log_soft)
-        C = Cn/(targets.size(dim=1))
-        return C
-
 
     
     def forward(self,
