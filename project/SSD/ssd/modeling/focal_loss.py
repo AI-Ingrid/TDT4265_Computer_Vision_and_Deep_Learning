@@ -41,7 +41,7 @@ class FocalLoss(nn.Module):
         self.scale_wh = 1.0/anchors.scale_wh
 
         self.num_classes = 8 + 1
-        self.alpha = torch.Tensor([0.01, 1, 1, 1, 1, 1, 1, 1, 1]).cpu()
+        self.alpha = torch.Tensor([10, 1000, 1000, 1000, 1000, 1000, 1000, 1, 1]).cpu()
         self.gamma = 2
 
         self.sl1_loss = nn.SmoothL1Loss(reduction='none')
