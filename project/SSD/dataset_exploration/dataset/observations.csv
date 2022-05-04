@@ -1,0 +1,10 @@
+labels,observations
+1.0,9563,car
+7.0,4910,person
+8.0,1588,rider
+5.0,1043,bicycle
+6.0,615,scooter
+3.0,445,bus
+2.0,123,truck
+0.0,0,background
+4.0,0,motorcycle
