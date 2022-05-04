@@ -41,30 +41,3 @@ data_val.gpu_transform = gpu_transform
 data_train.gpu_transform = gpu_transform
 
 label_map = {idx: cls_name for idx, cls_name in enumerate(TDT4265Dataset.class_names)} 
-
-
-
-def filter_predictions(
-        boxes_ltrb: torch.Tensor, confs: torch.Tensor,
-        nms_iou_threshold: float, max_output: int, score_threshold: float):
-        """
-            boxes_ltrb: shape [N, 4]
-            confs: shape [N, num_classes]
-        """
-        assert 0 <= nms_iou_threshold <= 1
-        assert max_output > 0
-        assert 0 <= score_threshold <= 1
-        scores, category = confs.max(dim=1)
-
-        # 1. Remove low confidence boxes / background boxes
-        mask = (scores > score_threshold).logical_and(category != 0)
-        boxes_ltrb = boxes_ltrb[mask]
-        scores = scores[mask]
-        category = category[mask]
-
-        # 2. Perform non-maximum-suppression
-        keep_idx = batched_nms(boxes_ltrb, scores, category, iou_threshold=nms_iou_threshold)
-
-        # 3. Only keep max_output best boxes (NMS returns indices in sorted order, decreasing w.r.t. scores)
-        keep_idx = keep_idx[:max_output]
-        return boxes_ltrb[keep_idx], category[keep_idx], scores[keep_idx] 
