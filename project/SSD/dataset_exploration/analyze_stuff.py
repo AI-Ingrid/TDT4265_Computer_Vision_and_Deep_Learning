@@ -56,13 +56,12 @@ def create_box_plot(data_frame, label_text):
     # display plot
     plt.show()
 
-def create_sum_plot(data_frame): 
+def create_sum_plot(observations): 
     sns.set_style({'grid.color': 'white'})
-
-    data_frame = data_frame['label'].value_counts()
-
+    print(observations.head(11))
+    
     # Sum the data, plot bar with given size using color defined
-    data_frame.plot(kind='bar', figsize=(10, 8), color='#A40E4C')
+    ax = sns.catplot(kind='bar', data=observations, x='labels', y='observations', color='#CE389C')
 
     # Title of the graph
     plt.title('No. of observations given a label', size = 20)
@@ -166,7 +165,7 @@ def analyze_something(dataloader, cfg):
 
 
 def main():
-    config_path = "configs/tdt4265.py"
+    config_path = "configs/tasks/task21_baseline.py"
     cfg = get_config(config_path)
     dataset_to_analyze = "train"  # or "val"
     
@@ -177,6 +176,7 @@ def main():
     try:
         print("Loading dataframe from file...")
         data_frame = pd.read_csv('dataset_exploration/dataset/data_frame.csv')
+        observations = pd.read_csv('dataset_exploration/dataset/observations.csv')
         print("Dataframe loaded")
     except:
         print("Creating dataframe...")
@@ -198,8 +198,8 @@ def main():
 
     # Creating the plots
     label_text = pd.read_csv("dataset_exploration/dataset/labels.csv")
-    #create_sum_plot(data_frame)
-    #create_box_plot(data_frame,label_text)
+    create_sum_plot(observations)
+    create_box_plot(data_frame,label_text)
     create_ratio_width_and_height(data_frame, label_text)
 
 
