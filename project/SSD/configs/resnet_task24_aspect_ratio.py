@@ -30,7 +30,7 @@ anchors = L(AnchorBoxes)(
     # aspect ratio is used to define two boxes per element in the list.
     # if ratio=[2], boxes will be created with ratio 1:2 and 2:1
     # Number of boxes per location is in total 2 + 2 per aspect ratio
-    aspect_ratios=[[2, 3, 4, 6], [2, 3, 4, 6], [2, 3, 4, 6], [2, 3, 4, 6], [2, 3, 4, 6], [2, 3, 4, 6]],
+    aspect_ratios=[[2, 3, 4], [2, 3, 4], [2, 3, 4], [2, 3, 4], [2, 3, 4], [2, 3, 4]],
     image_shape="${train.imshape}",
     scale_center_variance=0.1,
     scale_size_variance=0.2
@@ -89,8 +89,9 @@ data_train = dict(
     # GPU transforms can heavily speedup data augmentations.
     gpu_transform=L(torchvision.transforms.Compose)(transforms=[
         L(Normalize)(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])  # Normalize has to be applied after ToTensor (GPU transform is always after CPU)
-    ])
-)
+    ]))
+
+
 data_val = dict(
     dataset=L(MNISTDetectionDataset)(
         data_dir=get_dataset_dir("mnist_object_detection/val"),
