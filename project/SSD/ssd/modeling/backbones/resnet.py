@@ -95,7 +95,6 @@ class ResNet(torch.nn.Module):
         
         # Layer 6
         features_dict['feat5'] = self.layer6(features_dict['feat4'])
-        print("feat5", features_dict['feat5'])
         
         # Forward to FPN
         out_features = self.fpn(features_dict)
