@@ -7,7 +7,7 @@ from ssd.data.mnist import MNISTDetectionDataset
 from ssd import utils
 from ssd.data.transforms import Normalize, ToTensor, GroundTruthBoxesToAnchors, RandomHorizontalFlip, RandomSampleCrop
 from .utils import get_dataset_dir, get_output_dir
-from ssd.modeling.backbones import ResNetBiFPN
+from ssd.modeling.backbones import BiFPN
 
 train = dict(
     batch_size=32,
@@ -36,16 +36,16 @@ anchors = L(AnchorBoxes)(
     scale_size_variance=0.2
 )
 
-backbone = L(ResNetBiFPN)(
+backbone = L(BiFPN)(
     #type="resnet34", 
     #pretrained=True,
     # Without FPN
     #output_channels=[64, 128, 256, 512, 64, 64],
     # With FPN
-    output_channels=[64, 64, 64, 64, 64, 64],
+    out_channels=[64, 128, 256, 512, 256, 256],
     #TODO: Fix output_channels
-    image_channels="${train.image_channels}",
-    output_feature_sizes="${anchors.feature_sizes}"
+    #image_channels="${train.image_channels}",
+    output_feature_sizes = "${anchors.feature_sizes}"
 )
 
 loss_objective = L(SSDMultiboxLoss)(anchors="${anchors}")
