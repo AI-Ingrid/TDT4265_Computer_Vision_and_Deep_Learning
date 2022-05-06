@@ -256,7 +256,6 @@ class BiFPN(nn.Module):
         x2 = self.p2(x2)
         x3 = self.p3(x3)
         x4 = self.p4(x4)
-        print("X5 shape", x5.shape)
         x5 = self.p5(x5)
 
         features = [x1, x2, x3, x4, x5]
