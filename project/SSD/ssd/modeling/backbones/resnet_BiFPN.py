@@ -4,12 +4,22 @@ from torch import nn
 import torchvision.models as models
 import torchvision.ops as ops
 import numpy as np
+import torch.nn.functional as F
 
 class KevinLayer(nn.Sequential):
     def __init__(self,in_channels,out_channels, stride = 1, padding = 1, kernel_size=3):
         super().__init__(
             nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size, stride=stride, padding=padding),
         )
+
+class ConvLayerWithRelu(nn.Sequential):
+    def __init__(self,in_channels,out_channels, stride = 1, padding = 1, kernel_size=3):
+        super().__init__(
+            nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size, stride=stride, padding=padding),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU(), 
+        )
+
 
 
 class Layer(nn.Sequential):
@@ -47,14 +57,38 @@ class ResNetBiFPN(torch.nn.Module):
         self.layer5 = Layer(512, 256)
         self.layer6 = Layer(256, 256)
         
-        self.P1_layer = KevinLayer(64, 64)
-        self.P2_layer = KevinLayer(128, 64)
-        self.P3_layer = KevinLayer(256, 64)
-        self.P4_layer = KevinLayer(512, 64)
-        self.P5_layer  = KevinLayer(256, 64)
-        self.P6_layer  = KevinLayer(256, 64)
+        # Used to reshape the inputs
+        self.P1_layer = KevinLayer(256, 64)
+        self.P2_layer = KevinLayer(256, 64)
+        self.P3_layer = KevinLayer(512, 64)
+        self.P4_layer = KevinLayer(256, 64, stride = 2)
+        self.P5_layer  = KevinLayer(128, 64, stride = 4)
+        self.P6_layer  = KevinLayer(64, 64, stride = 8)
 
+        # Brukes i formel
+        self.epsilon = 0.0001
 
+        # td
+        self.P1_td_layer = ConvLayerWithRelu(64,64)
+        self.P2_td_layer = ConvLayerWithRelu(64,64)
+        self.P3_td_layer = ConvLayerWithRelu(64,64)
+        self.P4_td_layer = ConvLayerWithRelu(64,64)
+        self.P5_td_layer = ConvLayerWithRelu(64,64)
+
+        # out
+        self.P2_out_layer = ConvLayerWithRelu(64,64)
+        self.P3_out_layer = ConvLayerWithRelu(64,64)
+        self.P4_out_layer = ConvLayerWithRelu(64,64)
+        self.P5_out_layer = ConvLayerWithRelu(64,64)
+        self.P6_out_layer = ConvLayerWithRelu(64,64)
+
+        # Weights
+        # Opp og ned
+        self.w1 = nn.Parameter(torch.Tensor(2, 5))
+        self.w1_relu = nn.ReLU()
+        # Til høyre
+        self.w2 = nn.Parameter(torch.Tensor(3, 5))
+        self.w2_relu = nn.ReLU()
         
 
         
@@ -107,79 +141,87 @@ class ResNetBiFPN(torch.nn.Module):
         # Layer 6
         features_dict['feat5'] = self.layer6(features_dict['feat4'])
 
-        #print('features_dict type ',list(features_dict.values()))
+        P1 = features_dict["feat5"]
+        P2 = features_dict["feat4"]
+        P3 = features_dict["feat3"]
+        P4 = features_dict["feat2"]
+        P5 = features_dict["feat1"]
+        P6 = features_dict["feat0"]
 
-        P6 = features_dict["feat5"]
-        P5 = features_dict["feat4"]
-        P4 = features_dict["feat3"]
-        P3 = features_dict["feat2"]
-        P2 = features_dict["feat1"]
-        P1 = features_dict["feat0"]
-        
-
+        # Resizing each Px to have 64 channels
         P1 = self.P1_layer(P1)
-        print('P1 shape ', P1.shape) # 64
+        # print('P1 shape ', P1.shape) # 64
         P2 = self.P2_layer(P2)
-        print('P2 shape ', P2.shape) # 128 -> 64
+        # print('P2 shape ', P2.shape) # 128 -> 64
         P3 = self.P3_layer(P3)
-        print('P3 shape ', P3.shape) # 256 -> 64
+        # print('P3 shape ', P3.shape) # 256 -> 64
         P4 = self.P4_layer(P4)
-        print('P4 shape ', P4.shape) # 512 -> 64
+        # print('P4 shape ', P4.shape) # 512 -> 64
         P5 = self.P5_layer(P5)
-        print('P5 shape ', P5.shape) # 256 -> 64
+        # print('P5 shape ', P5.shape) # 256 -> 64
         P6 = self.P6_layer(P6)
-        print('P6 shape ', P6.shape) # 256 -> 64
+        # print('P6 shape ', P6.shape) # 256 -> 64
 
-
-        print('\n')
+        # print("P1 shape:", P1.shape)
+        # print("P2 shape:", P2.shape)
+        # print("P3 shape:", P3.shape)
+        # print("P4 shape:", P4.shape)
+        # print("P5 shape:", P5.shape)
+        # print("P6 shape:", P6.shape)
         
-        blue_layer = KevinLayer(256,512).cuda()
-        green_layer = KevinLayer(512,256).cuda()
-        purple_layer = KevinLayer(256,128).cuda()
-        red_layer = KevinLayer(128,64).cuda()
-        pink_layer = KevinLayer(64,64).cuda()
+       
+
+        # Top down
+        w1 = self.w1_relu(self.w1)
+        w1 /=  torch.sum(w1, dim=0) + self.epsilon
+        w2 = self.w2_relu(self.w2)
+        w2 /= torch.sum(w2, dim=0) + self.epsilon
+
+        up = nn.Upsample(scale_factor=2, mode='nearest')
+        down = nn.MaxPool2d(kernel_size=2)
+
+        #P5_td = self.P5_td_layer((self.w2[0,1] * P5 + self.w1[0,0] * P6)/(self.w1[0,0] + self.w2[0,1] + self.epsilon))
+        P6_td = up(P6)
+        P5_td = self.P5_td_layer(self.w1[1,0] * P6_td + self.w1[0,0] * up(P5))
+        P4_td = self.P4_td_layer(self.w1[1,1] * P5_td + self.w1[0,1] * up(P4))
+        P3_td = self.P3_td_layer(self.w1[1,2] * P4_td + self.w1[0,2] * up(P3))
+        P2_td = self.P2_td_layer(self.w1[1,3] * P3_td + self.w1[0,3] * up(P2))
+        P1_td = self.P1_td_layer(self.w1[1,4] * P2_td + self.w1[0,4] * up(P1))
         
-        yellow_layer = KevinLayer(256,256).cuda() 
+        # print("P1 shape:", P1_td.shape)
+        # print("P3 shape:", P3_td.shape)
+        # print("P4 shape:", P4_td.shape)
+        # print("P5 shape:", P5_td.shape)
+        # print("P6 shape:", P6_td.shape)
+
+        # Bottom up
+        P1_out = (P1_td)
+        P2_out = self.P2_out_layer(self.w2[0,0] * up(P2) + self.w2[1,0] * P2_td + self.w2[2,0] * (P1_out))
+        P3_out = self.P3_out_layer(self.w2[0,1] * up(P3) + self.w2[1,1] * P3_td + self.w2[2,1] * (P2_out))
+        P4_out = self.P4_out_layer(self.w2[0,2] * up(P4) + self.w2[1,2] * P4_td + self.w2[2,2] * (P3_out))
+        P5_out = self.P5_out_layer(self.w2[0,3] * up(P5) + self.w2[1,3] * P5_td + self.w2[2,3] * (P4_out))
+        P6_out = self.P6_out_layer(self.w2[0,4] * up(P6) + self.w2[1,4] * P6_td + self.w2[2,4] * P5_out)
         
-        for i in range(3):
-            # DOWN
-            blue_node = (P6 + P5).cuda() # 256 + 256 -> 512
-            blue_node = blue_layer(blue_node)
-
-            green_node = (P4 + blue_node) # 512 + 512 - 256
-            green_node = green_layer(green_node)
-
-            print('---------GREEEN-----------')
-            print('green node shape ', green_node.shape)
-            print('P3 shape ', P3.shape) 
-
-            purple_node = (P3 + green_node) # 256 + 256 -> 128
-            purple_node = purple_layer(purple_node)
-
-
-            red_node = (P2 + purple_node) # 128 + 128 -> 64
-            red_node =red_layer(red_node)
-            
-            
-            pink_node = (P1 + red_node) # 64 + 64 -> ?
-            pink_node = pink_layer(pink_node)
-
-            # UP
-            red_node = (red_node + P2 + pink_node) # 128 + 128 + 64
-            layer(red_node)
-            purple_node = (purple_node + P3 + red_node)
-            layer(purple_node)
-            green_node = (green_node + P4 + purple_node)
-            layer(green_node)
-            blue_node = (blue_node + P5 + green_node)
-            layer(blue_node)
-            yellow_node = (P6 + blue_node)
-            layer(yellow_node)
+        up4 = nn.Upsample(scale_factor=4, mode='nearest')
+        up2 = nn.Upsample(scale_factor=2, mode='nearest')
+        down2 = nn.MaxPool2d(kernel_size=2)
+        down4 = nn.MaxPool2d(kernel_size=4)
+        down8 = nn.MaxPool2d(kernel_size=8)
+        out_features = [up4(P6_out), up2(P5_out), (P4_out), down2(P3_out), down4(P2_out), down8(P1_td)]
         
+        # Box prediction net
 
-            out_features = [yellow_node, blue_node, green_node, purple_node, red_node]
+        """
+        # out
+        self.P2_out = ConvLayerWithRelu(64,64)
+        self.P3_out = ConvLayerWithRelu(64,64)
+        self.P4_out = ConvLayerWithRelu(64,64)
+        self.P5_out = ConvLayerWithRelu(64,64)
+        self.P6_out = ConvLayerWithRelu(64,64)
+        
+        """
 
-        for idx, feature in enumerate(out_features.values()):
+        for idx, feature in enumerate(out_features):
                     out_channel = self.out_channels[idx]
                     h, w = self.output_feature_shape[idx]
                     expected_shape = (out_channel, h, w)
