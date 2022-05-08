@@ -36,13 +36,6 @@ class ResNet(torch.nn.Module):
         self.layer5 = Layer(512, 256)
         self.layer6 = Layer(256, 256)
         
-        # Create a FPN with all the outputs
-        # FPN tar inn en liste med num channels per lag (liste med features) og antall output kanaler av hver features
-        #self.feature_pyramid_net = ops.FeaturePyramideNetwork(self.output_channels, self.output_feature_shape)
-        # self.fpn = ops.FeaturePyramidNetwork([64 , 128, 256, 512, 256, 256], 128)
-        # AssertionError: Expected shape: (64, 32, 256), got: torch.Size([128, 32, 256]) at output IDX: 0
-        # self.fpn = ops.FeaturePyramidNetwork([1024 , 128, 256, 512, 256, 512], 256)
-        # RuntimeError: Given groups=1, weight of size [256, 512, 1, 1], expected input[1, 256, 1, 8] to have 512 channels, but got 256 channels instead
         self.fpn = ops.FeaturePyramidNetwork([64 , 128, 256, 512, 256, 256], 256)
         
     def forward_first_layer(self, model, image):
@@ -54,8 +47,6 @@ class ResNet(torch.nn.Module):
         return x
 
     def forward(self, x):
-        #print("out channels ", self.out_channels)
-        #print("out feature ", self.output_feature_shape)
         """
         Performing forward pass for a layer at the time and saving every output in an array. 
         The forward functiom should output features with shape:
@@ -75,7 +66,6 @@ class ResNet(torch.nn.Module):
         
         # Layer 0
         x = self.forward_first_layer(self.model,x)
-        #print('x: ', x.shape)
 
 
         # Layer 1
