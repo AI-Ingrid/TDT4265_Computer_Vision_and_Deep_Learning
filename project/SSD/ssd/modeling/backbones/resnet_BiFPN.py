@@ -189,6 +189,7 @@ class BiFPNBlock(nn.Module):
         p5_out = self.p5_out(w2[0, 1] * p5_x + w2[1, 1] * p5_td + w2[2, 1] * nn.Upsample(scale_factor=0.5)(p4_out))
         p6_out = self.p6_out(w2[0, 2] * p6_x + w2[1, 2] * p6_td + w2[2, 2] * nn.Upsample(scale_factor=0.5)(p5_out))
         p7_out = self.p7_out(w2[0, 3] * p7_x + w2[1, 3] * p7_td + w2[2, 3] * nn.Upsample(scale_factor=0.5)(p6_out))
+        print('p7_out: ',p7_out)
         p8_out = self.p8_out(w2[0, 4] * p7_x + w2[1, 4] * p7_td + w2[2, 4] * nn.Upsample(scale_factor=0.5)(p7_out))
 
 
