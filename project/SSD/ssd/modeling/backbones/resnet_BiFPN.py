@@ -240,7 +240,7 @@ class BiFPN(nn.Module):
 
         features = [x1, x2, x3, x4, x5]
 
-        
+        tmp = self.bifpn(features)
 
         i = 1
         res = OrderedDict()
