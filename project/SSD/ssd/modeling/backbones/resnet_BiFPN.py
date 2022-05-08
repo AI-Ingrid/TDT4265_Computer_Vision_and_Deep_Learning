@@ -240,13 +240,11 @@ class BiFPN(nn.Module):
 
         features = [x1, x2, x3, x4, x5]
 
-        tmp = self.bifpn(features)
+        out_features_BiFPN = self.bifpn(features)
 
-        i = 1
-        res = OrderedDict()
-        res["feature0"] = x0
-        for val in tmp:
-            res[f"feature{i}"] = val
-            i = i + 1
 
-        return res.values()
+        out_features = []
+        for val in out_features_BiFPN:
+            res.append(val)
+
+        return res
