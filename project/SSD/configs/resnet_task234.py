@@ -37,18 +37,12 @@ anchors = L(AnchorBoxes)(
 )
 
 backbone = L(ResNet)(
-    #type="resnet34", 
-    #pretrained=True,
-    # Without FPN
-    #output_channels=[64, 128, 256, 512, 64, 64],
-    # With FPN
     output_channels=[256, 256, 256, 256, 256, 256],
-    #TODO: Fix output_channels
     image_channels="${train.image_channels}",
     output_feature_sizes="${anchors.feature_sizes}"
 )
 
-#loss_objective = L(SSDMultiboxLoss)(anchors="${anchors}")
+
 loss_objective = L(FocalLoss)(anchors="${anchors}")
 
 model = L(RetinaNet)(
@@ -75,9 +69,7 @@ data_train = dict(
         data_dir=get_dataset_dir("mnist_object_detection/train"),
         is_train=True,
         transform=L(torchvision.transforms.Compose)(transforms=[
-            #TODO: Add more augmentations here
             L(ToTensor)(),  # ToTensor has to be applied before conversion to anchors.
-           
             # GroundTruthBoxesToAnchors assigns each ground truth to anchors, required to compute loss in training.
             L(GroundTruthBoxesToAnchors)(anchors="${anchors}", iou_threshold=0.5),
         ])

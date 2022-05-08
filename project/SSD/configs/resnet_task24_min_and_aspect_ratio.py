@@ -37,11 +37,6 @@ anchors = L(AnchorBoxes)(
 )
 
 backbone = L(ResNet)(
-    #type="resnet34", 
-    #pretrained=True,
-    # Without FPN
-    #output_channels=[64, 128, 256, 512, 64, 64],
-    # With FPN
     output_channels=[256, 256, 256, 256, 256, 256],
     #TODO: Fix output_channels
     image_channels="${train.image_channels}",

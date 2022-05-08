@@ -37,14 +37,7 @@ anchors = L(AnchorBoxes)(
 )
 
 backbone = L(BiFPN)(
-    #type="resnet34", 
-    #pretrained=True,
-    # Without FPN
-    #output_channels=[64, 128, 256, 512, 64, 64],
-    # With FPN
     out_channels=[64, 128, 256, 512, 256, 256],
-    #TODO: Fix output_channels
-    #image_channels="${train.image_channels}",
     output_feature_sizes = "${anchors.feature_sizes}"
 )
 
@@ -74,7 +67,6 @@ data_train = dict(
         data_dir=get_dataset_dir("mnist_object_detection/train"),
         is_train=True,
         transform=L(torchvision.transforms.Compose)(transforms=[
-            #TODO: Add more augmentations here
             L(RandomSampleCrop)(),
             L(ToTensor)(),  # ToTensor has to be applied before conversion to anchors.
             L(RandomHorizontalFlip)(p=0.5),

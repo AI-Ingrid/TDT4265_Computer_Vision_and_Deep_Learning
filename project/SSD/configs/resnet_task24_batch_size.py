@@ -38,13 +38,7 @@ anchors = L(AnchorBoxes)(
 )
 
 backbone = L(ResNet)(
-    #type="resnet34", 
-    #pretrained=True,
-    # Without FPN
-    #output_channels=[64, 128, 256, 512, 64, 64],
-    # With FPN
     output_channels=[256, 256, 256, 256, 256, 256],
-    #TODO: Fix output_channels
     image_channels="${train.image_channels}",
     output_feature_sizes="${anchors.feature_sizes}"
 )
@@ -63,7 +57,7 @@ model = L(SSD300)(
 optimizer = L(torch.optim.SGD)(
     # Tip: Scale the learning rate by batch size! 2.6e-3 is set for a batch size of 32. use 2*2.6e-3 if you use 64
     # TODO change LR based on batch size 16 -> 0.5 * 2.6*e^-3
-    lr=5e-3, momentum=0.9, weight_decay=0.0005
+    lr=0.5*2.6e-3, momentum=0.9, weight_decay=0.0005
 )
 schedulers = dict(
     linear=L(LinearLR)(start_factor=0.1, end_factor=1, total_iters=500),
@@ -76,7 +70,6 @@ data_train = dict(
         data_dir=get_dataset_dir("mnist_object_detection/train"),
         is_train=True,
         transform=L(torchvision.transforms.Compose)(transforms=[
-            #TODO: Add more augmentations here
             L(RandomSampleCrop)(),
             L(ToTensor)(),  # ToTensor has to be applied before conversion to anchors.
             L(RandomHorizontalFlip)(p=0.5),
