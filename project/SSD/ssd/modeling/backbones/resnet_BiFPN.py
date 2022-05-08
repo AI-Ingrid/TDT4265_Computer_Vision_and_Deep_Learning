@@ -169,7 +169,7 @@ class BiFPNBlock(nn.Module):
 
     
     def forward(self, inputs):
-        p3_x, p4_x, p5_x, p6_x, p7_x = inputs
+        p2_x, p3_x, p4_x, p5_x, p6_x, p7_x = inputs
         
         # Calculate Top-Down Pathway
         w1 = self.w1_relu(self.w1)
