@@ -164,7 +164,7 @@ class BiFPNBlock(nn.Module):
 
         self.w1 = nn.Parameter(torch.normal(0, 1, size = (2, 4)))
         self.w1_relu = nn.ReLU(inplace=False)
-        self.w2 = nn.Parameter(torch.normal(0, 1, size = (3, 4)))
+        self.w2 = nn.Parameter(torch.normal(0, 1, size = (4, 5)))
         self.w2_relu = nn.ReLU(inplace=False)
 
     
@@ -192,7 +192,7 @@ class BiFPNBlock(nn.Module):
         p8_out = self.p8_out(w2[0, 4] * p7_x + w2[1, 4] * p7_td + w2[2, 4] * nn.Upsample(scale_factor=0.5)(p7_out))
 
 
-        return [p3_out, p4_out, p5_out, p6_out, p7_out]
+        return [p3_out, p4_out, p5_out, p6_out, p7_out, p8_out]
     
 class BiFPN(nn.Module):
   """
