@@ -103,12 +103,8 @@ class ResNet(torch.nn.Module):
         out_features = []
         features_dict = OrderedDict()
 
-
-
-        
         # Layer 0
         x = self.forward_first_layer(self.model,x)
-
 
         # Layer 1
         feat0 = self.model.layer1(x)
@@ -163,6 +159,7 @@ class BiFPNBlock(nn.Module):
         self.p5_out = DepthwiseConvBlock(feature_size, feature_size)
         self.p6_out = DepthwiseConvBlock(feature_size, feature_size)
         self.p7_out = DepthwiseConvBlock(feature_size, feature_size)
+        self.p8_out = DepthwiseConvBlock(feature_size, feature_size)
         
 
         self.w1 = nn.Parameter(torch.normal(0, 1, size = (2, 4)))
@@ -192,6 +189,7 @@ class BiFPNBlock(nn.Module):
         p5_out = self.p5_out(w2[0, 1] * p5_x + w2[1, 1] * p5_td + w2[2, 1] * nn.Upsample(scale_factor=0.5)(p4_out))
         p6_out = self.p6_out(w2[0, 2] * p6_x + w2[1, 2] * p6_td + w2[2, 2] * nn.Upsample(scale_factor=0.5)(p5_out))
         p7_out = self.p7_out(w2[0, 3] * p7_x + w2[1, 3] * p7_td + w2[2, 3] * nn.Upsample(scale_factor=0.5)(p6_out))
+        p8_out = self.p8_out(w2[0, 4] * p7_x + w2[1, 4] * p7_td + w2[2, 4] * nn.Upsample(scale_factor=0.5)(p7_out))
 
 
         return [p3_out, p4_out, p5_out, p6_out, p7_out]
@@ -238,13 +236,13 @@ class BiFPN(nn.Module):
         x4 = self.p4(x4)
         x5 = self.p5(x5)
 
-        features = [x1, x2, x3, x4, x5]
+        features = [x0, x1, x2, x3, x4, x5]
 
         out_features_BiFPN = self.bifpn(features)
 
 
         out_features = []
         for val in out_features_BiFPN:
-            res.append(val)
+            out_features.append(val)
 
-        return res
+        return out_features
