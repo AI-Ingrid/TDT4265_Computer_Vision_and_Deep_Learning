@@ -158,13 +158,11 @@ class BiFPNBlock(nn.Module):
         self.p4_td = DepthwiseConvBlock(feature_size, feature_size)
         self.p5_td = DepthwiseConvBlock(feature_size, feature_size)
         self.p6_td = DepthwiseConvBlock(feature_size, feature_size)
-        self.p7_td = DepthwiseConvBlock(feature_size, feature_size)
         
         self.p4_out = DepthwiseConvBlock(feature_size, feature_size)
         self.p5_out = DepthwiseConvBlock(feature_size, feature_size)
         self.p6_out = DepthwiseConvBlock(feature_size, feature_size)
         self.p7_out = DepthwiseConvBlock(feature_size, feature_size)
-        self.p8_out = DepthwiseConvBlock(feature_size, feature_size)
         
 
         self.w1 = nn.Parameter(torch.normal(0, 1, size = (2, 4)))
@@ -174,7 +172,7 @@ class BiFPNBlock(nn.Module):
 
     
     def forward(self, inputs):
-        p3_x, p4_x, p5_x, p6_x, p7_x, p8_x = inputs
+        p3_x, p4_x, p5_x, p6_x, p7_x = inputs
         
         # Calculate Top-Down Pathway
         w1 = self.w1_relu(self.w1)
@@ -182,8 +180,7 @@ class BiFPNBlock(nn.Module):
         w2 = self.w2_relu(self.w2)
         w2 = w2 / (torch.sum(w2, dim=0) + self.epsilon)
 
-        p8_td = p8_x
-        p7_td = self.p7_td(w1[0, 0] * p7_x + w1[1, 0] * F.interpolate(p8_td, scale_factor=2))       
+        p7_td = p7_x    
         p6_td = self.p6_td(w1[0, 0] * p6_x + w1[1, 0] * F.interpolate(p7_td, scale_factor=2))       
         p5_td = self.p5_td(w1[0, 1] * p5_x + w1[1, 1] * F.interpolate(p6_td, scale_factor=2))
         p4_td = self.p4_td(w1[0, 2] * p4_x + w1[1, 2] * F.interpolate(p5_td, scale_factor=2))
@@ -195,10 +192,9 @@ class BiFPNBlock(nn.Module):
         p5_out = self.p5_out(w2[0, 1] * p5_x + w2[1, 1] * p5_td + w2[2, 1] * nn.Upsample(scale_factor=0.5)(p4_out))
         p6_out = self.p6_out(w2[0, 2] * p6_x + w2[1, 2] * p6_td + w2[2, 2] * nn.Upsample(scale_factor=0.5)(p5_out))
         p7_out = self.p7_out(w2[0, 3] * p7_x + w2[1, 3] * p7_td + w2[2, 3] * nn.Upsample(scale_factor=0.5)(p6_out))
-        p8_out = self.p8_out(w2[0, 3] * p8_x + w2[1, 3] * p8_td + w2[2, 3] * nn.Upsample(scale_factor=0.5)(p7_out))
 
 
-        return [p3_out, p4_out, p5_out, p6_out, p7_out, p8_out]
+        return [p3_out, p4_out, p5_out, p6_out, p7_out]
     
 class BiFPN(nn.Module):
   """
@@ -240,12 +236,10 @@ class BiFPN(nn.Module):
         x2 = self.p2(x2)
         x3 = self.p3(x3)
         x4 = self.p4(x4)
-        print("X5 shape", x5.shape)
         x5 = self.p5(x5)
 
         features = [x1, x2, x3, x4, x5]
 
-        tmp = self.bifpn(features)
         
 
         i = 1
