@@ -1,1 +1,1 @@
-# TDT4265-Data-Vision-and-Deep-Learning
+# TDT4265-Computer-Vision-and-Deep-Learning
